@@ -1,4 +1,4 @@
-# GPT API Coder Backend
+# Coder-API
 
 A minimal backend for an autonomous project modification agent to be consumed by chatGPT using OpenAPI specs. 
 
