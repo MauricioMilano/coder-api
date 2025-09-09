@@ -1,0 +1,339 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "GPT-5 Coder API",
+    "description": "Coleção de rotas da API GPT-5 Coder para uso no Postman.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://70f48d104595.ngrok-free.app"
+    }
+  ],
+  "paths": {
+    "/projects": {
+      "get": {
+        "summary": "Listar Projetos",
+        "operationId": "listProjects",
+        "responses": {
+          "200": {
+            "description": "Lista de projetos retornada com sucesso."
+          }
+        }
+      },
+      "post": {
+        "summary": "Criar Projeto (Git)",
+        "operationId": "createProject",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "type": "object",
+                    "properties": {
+                      "git": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string"
+                          },
+                          "branch": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Projeto criado com sucesso."
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/filetree": {
+      "get": {
+        "summary": "Listar Filetree",
+        "operationId": "listFiletree",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "path",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "depth",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "glob",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "max_entries",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Árvore de arquivos listada com sucesso."
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/files": {
+      "get": {
+        "summary": "Ler Arquivo do Projeto",
+        "operationId": "readProjectFile",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "path",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "encoding",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conteúdo do arquivo retornado."
+          }
+        }
+      },
+      "post": {
+        "summary": "Criar Arquivo no Projeto",
+        "operationId": "createProjectFile",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "encoding": {
+                    "type": "string"
+                  },
+                  "create_parents": {
+                    "type": "boolean"
+                  },
+                  "overwrite": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Arquivo criado com sucesso."
+          }
+        }
+      },
+      "patch": {
+        "summary": "Editar Arquivo do Projeto",
+        "operationId": "editProjectFile",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "Caminho do arquivo a ser modificado."
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "Conteúdo contendo os blocos de substituição com delimitadores '// ------- SEARCH', '// =======', '// +++++++ REPLACE'."
+                  }
+                },
+                "required": ["path", "content"]
+              },
+              "example": {
+                "path": "src/App.js",
+                "content": "// ------- SEARCH\nimport { Communication } from \"./pages/Communication\";\n// =======\nimport CommunicationPage from \"./pages/Communication\";\n// +++++++ REPLACE\n// ------- SEARCH\n<Route path=\"/communication\" element={<Communication />} />\n// =======\n<Route path=\"/communication\" element={<CommunicationPage />} />\n// +++++++ REPLACE\n"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Arquivo atualizado com sucesso com base nos blocos de substituição."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletar Arquivo/Pasta do Projeto",
+        "operationId": "deleteProjectPath",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "recursive": {
+                    "type": "boolean"
+                  },
+                  "missing_ok": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Arquivo ou pasta deletado com sucesso."
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/bash": {
+      "post": {
+        "summary": "Executar Bash no Projeto",
+        "operationId": "runBashCommand",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "command": {
+                    "type": "string"
+                  },
+                  "workdir": {
+                    "type": "string"
+                  },
+                  "timeout_sec": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Comando executado com sucesso."
+          }
+        }
+      }
+    },
+    "/projects/": {
+      "get": {
+        "summary": "Obter Projeto",
+        "operationId": "getProject",
+        "responses": {
+          "200": {
+            "description": "Informações do projeto obtidas com sucesso."
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,157 @@
+{
+  "info": {
+    "_postman_id": "gpt-5-coder-collection-001",
+    "name": "GPT-5 Coder API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Coleção de rotas da API GPT-5 Coder para uso no Postman."
+  },
+  "item": [
+    {
+      "name": "Listar Projetos",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/projects",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects"]
+        }
+      }
+    },
+    {
+      "name": "Criar Projeto (Git)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"source\": {\n    \"git\": {\n      \"url\": \"https://github.com/exemplo/repo.git\",\n      \"branch\": \"main\"\n    }\n  },\n  \"name\": \"Meu Projeto Git\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/projects",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects"]
+        }
+      }
+    },
+    {
+      "name": "Obter Projeto",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/projects/:projectId",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", ":projectId"]
+        }
+      }
+    },
+    {
+      "name": "Listar Filetree",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/projects/:projectId/filetree",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", ":projectId", "filetree"],
+          "query": [
+            { "key": "path", "value": "", "disabled": true },
+            { "key": "depth", "value": "", "disabled": true },
+            { "key": "glob", "value": "", "disabled": true },
+            { "key": "max_entries", "value": "", "disabled": true }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Ler Arquivo do Projeto",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/projects/:projectId/files?path=CAMINHO/ARQUIVO",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", ":projectId", "files"],
+          "query": [
+            { "key": "path", "value": "CAMINHO/ARQUIVO" },
+            { "key": "encoding", "value": "text", "disabled": true }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Criar Arquivo no Projeto",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"path\": \"novo_arquivo.txt\",\n  \"content\": \"Conteúdo do arquivo\",\n  \"encoding\": \"text\",\n  \"create_parents\": true,\n  \"overwrite\": false\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/projects/:projectId/files",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", ":projectId", "files"]
+        }
+      }
+    },
+    {
+      "name": "Editar Arquivo do Projeto",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"path\": \"arquivo.txt\",\n  \"mode\": \"replace\",\n  \"content\": \"Novo conteúdo\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/projects/:projectId/files",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", ":projectId", "files"]
+        }
+      }
+    },
+    {
+      "name": "Deletar Arquivo/Pasta do Projeto",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"path\": \"arquivo_ou_pasta.txt\",\n  \"recursive\": false,\n  \"missing_ok\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/projects/:projectId/files",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", ":projectId", "files"]
+        }
+      }
+    },
+    {
+      "name": "Executar Bash no Projeto",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"command\": \"ls -la\",\n  \"workdir\": \"/\",\n  \"timeout_sec\": 10\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/projects/:projectId/bash",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", ":projectId", "bash"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3007" }
+  ]
+}
