@@ -1,5 +1,5 @@
 {
-  "name": "gpt-5-coder-backend",
+  "name": "coder-api",
   "version": "0.1.0",
   "description": "MVP backend para agente autônomo de modificação de projetos",
   "main": "dist/server.js",
