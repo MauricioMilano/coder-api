@@ -1,6 +1,6 @@
-# GPT API Coder Backend
+# GPT-5 Coder Backend
 
-A minimal backend for an autonomous project modification agent to be consumed by chatGPT using OpenAPI specs. 
+A minimal backend for an autonomous project modification agent to be consumed by 
 
 ## Features
 
@@ -55,13 +55,13 @@ A minimal backend for an autonomous project modification agent to be consumed by
 
 Build and run with Docker:
 ```sh
-docker build -t gpt-backend-coder .
-docker run -it --rm -e WORKSPACE_ROOT=/srv/workspace -v /srv/workspace:/srv/workspace -p 3007:3007 gpt5-backend-coder
+docker build -t gpt5-coder .
+docker run -it --rm -e WORKSPACE_ROOT=/srv/workspace -v /srv/workspace:/srv/workspace -p 3000:3000 gpt5-coder
 ```
 
 ## API Usage
 
-See `openapi.json` for the full contract.
+See `openapi.yaml` for the full contract.
 
 ### Example requests
 

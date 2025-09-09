@@ -1,4 +1,7 @@
 import Fastify from 'fastify';
+import dotenv from 'dotenv';
+// Load environment variables from .env file if present
+dotenv.config();
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
 import { config } from './config';
