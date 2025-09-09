@@ -2,27 +2,27 @@
   "openapi": "3.1.1",
   "info": {
     "title": "GPT-5 Coder API",
-    "description": "Coleção de rotas da API GPT-5 Coder para uso no Postman.",
+    "description": "Collection of GPT-5 Coder API routes for use in Postman.",
     "version": "1.0.0"
   },
   "servers": [
     {
-      "url": "https://70f48d104595.ngrok-free.app"
+      "url": "https://localhost:3007"
     }
   ],
   "paths": {
     "/projects": {
       "get": {
-        "summary": "Listar Projetos",
+        "summary": "List Projects",
         "operationId": "listProjects",
         "responses": {
           "200": {
-            "description": "Lista de projetos retornada com sucesso."
+            "description": "Project list returned successfully."
           }
         }
       },
       "post": {
-        "summary": "Criar Projeto (Git)",
+        "summary": "Create Project (Git)",
         "operationId": "createProject",
         "requestBody": {
           "required": true,
@@ -57,14 +57,14 @@
         },
         "responses": {
           "201": {
-            "description": "Projeto criado com sucesso."
+            "description": "Project created successfully."
           }
         }
       }
     },
     "/projects/{projectId}/filetree": {
       "get": {
-        "summary": "Listar Filetree",
+        "summary": "List Filetree",
         "operationId": "listFiletree",
         "parameters": [
           {
@@ -110,14 +110,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Árvore de arquivos listada com sucesso."
+            "description": "File tree listed successfully."
           }
         }
       }
     },
     "/projects/{projectId}/files": {
       "get": {
-        "summary": "Ler Arquivo do Projeto",
+        "summary": "Read Project File",
         "operationId": "readProjectFile",
         "parameters": [
           {
@@ -147,12 +147,12 @@
         ],
         "responses": {
           "200": {
-            "description": "Conteúdo do arquivo retornado."
+            "description": "File content returned."
           }
         }
       },
       "post": {
-        "summary": "Criar Arquivo no Projeto",
+        "summary": "Create Project File",
         "operationId": "createProjectFile",
         "parameters": [
           {
@@ -193,12 +193,12 @@
         },
         "responses": {
           "201": {
-            "description": "Arquivo criado com sucesso."
+            "description": "File created successfully."
           }
         }
       },
       "patch": {
-        "summary": "Editar Arquivo do Projeto",
+        "summary": "Edit Project File",
         "operationId": "editProjectFile",
         "parameters": [
           {
@@ -219,30 +219,32 @@
                 "properties": {
                   "path": {
                     "type": "string",
-                    "description": "Caminho do arquivo a ser modificado."
+                    "description": "Path of the file to be edited."
                   },
                   "content": {
                     "type": "string",
-                    "description": "Conteúdo contendo os blocos de substituição com delimitadores '// ------- SEARCH', '// =======', '// +++++++ REPLACE'."
+                    "description": "Patch diff content to apply to the file. Example: diff --git a/src/example.txt b/src/example.txt\nindex e69de29..b6fc4c6 100644\n--- a/src/example.txt\n+++ b/src/example.txt\n@@ -0,0 +1,2 @@\n+Hello\n+World\n"
                   }
                 },
                 "required": ["path", "content"]
               },
               "example": {
-                "path": "src/App.js",
-                "content": "// ------- SEARCH\nimport { Communication } from \"./pages/Communication\";\n// =======\nimport CommunicationPage from \"./pages/Communication\";\n// +++++++ REPLACE\n// ------- SEARCH\n<Route path=\"/communication\" element={<Communication />} />\n// =======\n<Route path=\"/communication\" element={<CommunicationPage />} />\n// +++++++ REPLACE\n"
+                "path": "src/example.txt",
+                "mode": "replace",
+                "content": "diff --git a/src/example.txt b/src/example.txt\nindex e69de29..b6fc4c6 100644\n--- a/src/example.txt\n+++ b/src/example.txt\n@@ -0,0 +1,2 @@\n+Hello\n+World\n",
+                "expected_hash": "OPTIONAL_HASH"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Arquivo atualizado com sucesso com base nos blocos de substituição."
+            "description": "File edited successfully."
           }
         }
       },
       "delete": {
-        "summary": "Deletar Arquivo/Pasta do Projeto",
+        "summary": "Delete Project File/Folder",
         "operationId": "deleteProjectPath",
         "parameters": [
           {
@@ -277,14 +279,14 @@
         },
         "responses": {
           "200": {
-            "description": "Arquivo ou pasta deletado com sucesso."
+            "description": "File or folder deleted successfully."
           }
         }
       }
     },
     "/projects/{projectId}/bash": {
       "post": {
-        "summary": "Executar Bash no Projeto",
+        "summary": "Run Bash in Project",
         "operationId": "runBashCommand",
         "parameters": [
           {
@@ -319,18 +321,18 @@
         },
         "responses": {
           "200": {
-            "description": "Comando executado com sucesso."
+            "description": "Command executed successfully."
           }
         }
       }
     },
     "/projects/": {
       "get": {
-        "summary": "Obter Projeto",
+        "summary": "Get Project",
         "operationId": "getProject",
         "responses": {
           "200": {
-            "description": "Informações do projeto obtidas com sucesso."
+            "description": "Project information obtained successfully."
           }
         }
       }
