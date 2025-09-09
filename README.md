@@ -71,15 +71,6 @@ ngrok http 3000
 Replace `3000` with the port your backend is running on. Use the generated public URL in ChatGPT or any external client.
 
 
-
-## Docker
-
-Build and run with Docker:
-```sh
-docker build -t gpt-backend-coder .
-docker run -it --rm -e WORKSPACE_ROOT=/srv/workspace -v /srv/workspace:/srv/workspace -p 3007:3007 gpt5-backend-coder
-```
-
 ## API Usage
 
 See `openapi.json` for the full contract.
