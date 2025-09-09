@@ -26,7 +26,7 @@ export const config = {
 export const swaggerOptions = {
   openapi: {
     info: {
-      title: 'GPT-5 Coder Backend API',
+      title: 'Coder Backend API',
       version: 'v1.0.0',
       description: 'API REST minimalista para agente autônomo de modificação de projetos.',
     },

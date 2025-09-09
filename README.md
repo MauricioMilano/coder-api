@@ -19,8 +19,8 @@ A minimal backend for an autonomous project modification agent to be consumed by
 
 1. **Clone the repository:**
    ```sh
-   git clone <repo-url>
-   cd gpt-5-coder
+   git clone https://github.com/MauricioMilano/coder-api.git
+   cd coder-api
    ```
 
 2. **Install dependencies:**

@@ -1,4 +1,4 @@
-# GPT-5 Coder Backend
+# Coder API
 
 A minimal backend for an autonomous project modification agent to be consumed by 
 

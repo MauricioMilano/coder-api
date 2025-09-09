@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.1",
   "info": {
-    "title": "GPT-5 Coder API",
-    "description": "Collection of GPT-5 Coder API routes for use in Postman.",
+    "title": "Coder API",
+    "description": "Collection of Coder API routes for use in Postman.",
     "version": "1.0.0"
   },
   "servers": [

@@ -1,9 +1,9 @@
 {
   "info": {
-    "_postman_id": "gpt-5-coder-collection-001",
-    "name": "GPT-5 Coder API",
+    "_postman_id": "coder-api-collection-001",
+    "name": "Coder API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Coleção de rotas da API GPT-5 Coder para uso no Postman."
+    "description": "Coleção de rotas da API Coder para uso no Postman."
   },
   "item": [
     {
