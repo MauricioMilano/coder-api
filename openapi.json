@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://localhost:3007"
+      "url": "https://25a7d825a182.ngrok-free.app"
     }
   ],
   "paths": {
@@ -223,16 +223,14 @@
                   },
                   "content": {
                     "type": "string",
-                    "description": "Patch diff content to apply to the file. Example: diff --git a/src/example.txt b/src/example.txt\nindex e69de29..b6fc4c6 100644\n--- a/src/example.txt\n+++ b/src/example.txt\n@@ -0,0 +1,2 @@\n+Hello\n+World\n"
+                    "description": "Content containing the substitution blocks with delimiters '// ------- SEARCH', '// =======', '// +++++++ REPLACE'."
                   }
                 },
                 "required": ["path", "content"]
               },
               "example": {
                 "path": "src/example.txt",
-                "mode": "replace",
-                "content": "diff --git a/src/example.txt b/src/example.txt\nindex e69de29..b6fc4c6 100644\n--- a/src/example.txt\n+++ b/src/example.txt\n@@ -0,0 +1,2 @@\n+Hello\n+World\n",
-                "expected_hash": "OPTIONAL_HASH"
+                "content": "// ------- SEARCH\nimport { Communication } from \"./pages/Communication\";\n// =======\nimport CommunicationPage from \"./pages/Communication\";\n// +++++++ REPLACE\n// ------- SEARCH\n<Route path=\"/communication\" element={<Communication />} />\n// =======\n<Route path=\"/communication\" element={<CommunicationPage />} />\n// +++++++ REPLACE\n"
               }
             }
           }
