@@ -2,6 +2,10 @@
 
 A minimal backend for an autonomous project modification agent to be consumed by chatGPT using OpenAPI specs. 
 
+Example: 
+
+![example](./docs/gpt-running.png)
+
 ## Features
 
 - Fastify server with REST API for project and file management
@@ -57,15 +61,23 @@ A minimal backend for an autonomous project modification agent to be consumed by
 To allow ChatGPT (or any external service) to access your local backend, you must expose your server to the public internet using a tunneling service. This is required because ChatGPT cannot access localhost or private IPs directly.
 
 
-### Exposing with LocalTunnel (Recommended for Quick Testing)
+### Exposing with Ngrok
 
-This project includes a script to expose your local server using [localtunnel](https://github.com/localtunnel/localtunnel).
+This project includes a script to expose your local server using [ngrok](https://ngrok.com/).
 
 **You might need to configure the npx package for ngrok.**
+
+You must create a ngrok account and get your token. It's free! 
+
+After you create your account, go to https://dashboard.ngrok.com to get your token. 
+![image](./docs/ngrok.png)
+
+Then apply it to internal ngrok.
 
 ```
 npx ngrok config add-authtoken $YOUR_AUTHTOKEN
 ```
+
 
 
 **To start the server and get a public URL:**
@@ -77,28 +89,32 @@ pnpm tunnel
 You will see output like:
 
 ```
-Server listening locally on port 3000
-LocalTunnel URL: https://your-subdomain.loca.lt
+{"level":30,"time":1757608557875,"pid":7446,"hostname":"Mauricio-Pc","msg":"Server listening at http://0.0.0.0:3007"}
+Server listening locally on port 3007
+ChatGPT URL: https://9da9b5af730b.ngrok-free.app/openapi
 ```
 
 Use the LocalTunnel URL in ChatGPT or any external client.
 
 ---
 
-You can also use other tunneling services, such as:
+## GPT Usage
+First, go to https://chatgpt.com/gpts and create your GPT.
+![mygpts](./docs/mygpts.png)
 
-- [ngrok](https://ngrok.com/)
-- [loca.lt](https://docs.localtunnel.me/)
-- [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/)
+Then fill your gpt with details and create an action. 
+![actions](./docs/new_gpt.png)
 
-**Example with ngrok:**
+Then, choose the option to import url.and there you should paste your url there `your_app.ngrok-free.app/openapi`. Don't forget the /openapi. 
 
-```sh
-ngrok http 3000
-```
+![importing url](./docs/import_url.png)
 
-Replace `3000` with the port your backend is running on. Use the generated public URL in ChatGPT or any external client.
+after you import the url, you should see the new tasks that your chatgpt can use: 
 
+![after import](./docs/coder_imported.png)
+
+
+Then save it and use your autonomous Agent
 
 ## API Usage
 
