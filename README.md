@@ -33,7 +33,7 @@ Example:
    ```
 
 3. **Configure environment variables:**
-   Create a `.env` file (example):
+   Create a `.env` file (example) and update `WORKSPACE_ROOT` with the folder that will be your projects. This folder must start empty:
    ```
    PORT=3000
    WORKSPACE_ROOT=/srv/workspace
@@ -94,7 +94,7 @@ Server listening locally on port 3007
 ChatGPT URL: https://my123url.ngrok-free.app/openapi
 ```
 
-Use the LocalTunnel URL in ChatGPT or any external client.
+Use the ngrok URL in ChatGPT or any external client.
 
 ---
 
