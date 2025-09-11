@@ -1,10 +1,15 @@
 # Coder-API
 
-A minimal backend for an autonomous project modification agent to be consumed by chatGPT using OpenAPI specs. 
-
-Example: 
+A backend for an autonomous agent to be used through the ChatGPT UI. 
 
 ![example](./docs/gpt_running.png)
+
+## How it works. 
+- Coder-API runs on your computer and lets you access your files, folders, terminal.
+- A tunnel connects your local API to the internet using Ngrok.
+- Ngrok creates a link so that external services (like GPT) can reach your Coder-API.
+- GPT (or other AI tools) can now interact with your computer’s resources by sending requests through this tunnel.
+![architecture](./docs/architecture.png)
 
 ## Features
 
