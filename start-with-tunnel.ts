@@ -1,5 +1,5 @@
 import server from './src/server';
-import localtunnel from 'localtunnel';
+import ngrok from 'ngrok';
 import { config } from './src/config';
 
 (async () => {
@@ -7,10 +7,6 @@ import { config } from './src/config';
   await server.listen({ port, host: '0.0.0.0' });
   console.log(`Server listening locally on port ${port}`);
 
-  const tunnel = await localtunnel({ port });
-  console.log(`LocalTunnel URL: ${tunnel.url}`);
-
-  tunnel.on('close', () => {
-    console.log('LocalTunnel closed');
-  });
+  const url = await ngrok.connect({ addr: port, proto: 'http' });
+  console.log(`ChatGPT URL: ${url}/openapi`);
 })();

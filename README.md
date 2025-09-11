@@ -67,12 +67,6 @@ This project includes a script to expose your local server using [localtunnel](h
 pnpm tunnel
 ```
 
-or
-
-```sh
-npm run tunnel
-```
-
 You will see output like:
 
 ```
