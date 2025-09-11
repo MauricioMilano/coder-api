@@ -22,7 +22,7 @@
         }
       },
       "post": {
-        "summary": "Create Project (Git)",
+        "summary": "Create Project",
         "operationId": "createProject",
         "requestBody": {
           "required": true,
@@ -32,23 +32,77 @@
                 "type": "object",
                 "properties": {
                   "source": {
-                    "type": "object",
-                    "properties": {
-                      "git": {
-                        "type": "object",
-                        "properties": {
-                          "url": {
-                            "type": "string"
-                          },
-                          "branch": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
+                    "oneOf": [
+                      {"type": "object", "properties": {"git": {"type": "object", "properties": {"url": {"type": "string"}, "branch": {"type": "string"}, "depth": {"type": "number"}, "token_env": {"type": "string"}}}}},
+                      {"type": "object", "properties": {"local": {"type": "object", "properties": {"mount": {"type": "string"}, "path": {"type": "string"}}}}},
+                      {"type": "object", "properties": {"archiveUrl": {"type": "string", "format": "uri"}, "extract_to": {"type": "string"}}},
+                      {"type": "object", "properties": {"adopt": {"type": "object", "properties": {"path": {"type": "string"}}}}}
+                    ]
                   },
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Project name. Used to generate a friendly project_id and folder name."
+                  }
+                },
+                "required": ["source", "name"]
+              },
+              "examples": {
+                "git": {
+                  "summary": "Add project from a public Git repository",
+                  "value": {
+                    "source": {
+                      "git": {
+                        "url": "https://github.com/mauriciomilano/coder-api.git",
+                        "branch": "main"
+                      }
+                    },
+                    "name": "coder-api-git"
+                  }
+                },
+                "git-private": {
+                  "summary": "Add project from a private Git repository with token",
+                  "value": {
+                    "source": {
+                      "git": {
+                        "url": "https://github.com/username/private-repo.git",
+                        "branch": "main",
+                        "token_env": "GITHUB_TOKEN"
+                      }
+                    },
+                    "name": "my-private-project"
+                  }
+                },
+                "local": {
+                  "summary": "Add project from a mounted local directory",
+                  "value": {
+                    "source": {
+                      "local": {
+                        "mount": "workbench",
+                        "path": "/my-project"
+                      }
+                    },
+                    "name": "my-local-project"
+                  }
+                },
+                "archiveUrl": {
+                  "summary": "Add project from an archive file (not implemented)",
+                  "value": {
+                    "source": {
+                      "archiveUrl": "https://mysite.com/project.zip",
+                      "extract_to": "/"
+                    },
+                    "name": "project-zip"
+                  }
+                },
+                "adopt": {
+                  "summary": "Adopt an existing directory from the filesystem",
+                  "value": {
+                    "source": {
+                      "adopt": {
+                        "path": "/srv/workspace/projects/already-existing"
+                      }
+                    },
+                    "name": "existing-project"
                   }
                 }
               }
@@ -59,6 +113,51 @@
           "201": {
             "description": "Project created successfully."
           }
+        }
+      }
+    },
+    "/projects/{projectId}": {
+      "patch": {
+        "summary": "Edit Project Name",
+        "operationId": "editProjectName",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Current project_id (slug)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "New project name. Will update project_id and folder if changed."
+                  }
+                },
+                "required": ["name"]
+              },
+              "example": {
+                "name": "novo-nome-do-projeto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Project name updated successfully. Returns new project_id, name, and root."
+          },
+          "400": {"description": "Invalid new name."},
+          "404": {"description": "Project not found."},
+          "500": {"description": "Failed to rename folder."}
         }
       }
     },
@@ -223,7 +322,7 @@
                   },
                   "content": {
                     "type": "string",
-                    "description": "Content containing the substitution blocks with delimiters '// ------- SEARCH', '// =======', '// +++++++ REPLACE'."
+                    "description": "Content containing the substitution blocks with delimiters '// ------- SEARCH', '// =======', '// +++++++ REPLACE'. You should use it always. The content between '// ------- SEARCH' and '// =======' is the text to be searched, and the content between '// =======' and '// +++++++ REPLACE' is the text to replace it with."
                   }
                 },
                 "required": ["path", "content"]

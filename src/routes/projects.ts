@@ -2,12 +2,21 @@ import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import path from 'path';
 import fs from 'fs/promises';
+
 import { config } from '../config';
 import { Project } from '../types/common';
 import { idemCache } from '../lib/idem';
 import { exec } from 'child_process';
 
-const projectStateDir = path.join('.state');
+function slugify(str: string) {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '')
+    .slice(0, 40);
+}
+
+const projectStateDir = path.join(config.workspaceRoot, '.state');
 
 const ProjectSourceSchema = z.union([
   z.object({ git: z.object({ url: z.string(), branch: z.string().default('main'), depth: z.number().default(1), token_env: z.string().optional() }) }),
@@ -39,13 +48,22 @@ export default async function (fastify: FastifyInstance) {
       const cached = idemCache.get(req.method, req.url, idemKey);
       if (cached) return reply.send(cached);
     }
-    let projectId = 'prj_' + Math.random().toString(36).slice(2, 10);
+    let baseId = slugify(name);
+    let projectId = baseId;
+    let idx = 1;
+    while (true) {
+      try {
+        await fs.access(path.join(projectStateDir, `${projectId}.json`));
+        projectId = `${baseId}-${idx++}`;
+      } catch {
+        break;
+      }
+    }
     let rootAbsPath = '';
+    const projectsRoot = path.join(config.workspaceRoot, 'projects');
     if ('git' in source) {
       if (!config.allowNetwork) return reply.status(501).send({ error: 'Network not allowed' });
-      // Prepare clone path
-      rootAbsPath = path.join(config.workspaceRoot, 'projects', projectId);
-      // Check if directory already exists and is not empty
+      rootAbsPath = path.join(projectsRoot, projectId);
       try {
         await fs.access(rootAbsPath);
         const files = await fs.readdir(rootAbsPath);
@@ -55,11 +73,9 @@ export default async function (fastify: FastifyInstance) {
       } catch {
         await fs.mkdir(rootAbsPath, { recursive: true });
       }
-      // Prepare git clone command
       const { url, branch = 'main', depth = 1, token_env } = source.git;
       let cloneUrl = url;
       if (token_env && process.env[token_env]) {
-        // Insert token into URL for private repos
         cloneUrl = url.replace('https://', `https://${process.env[token_env]}@`);
       }
       const gitCmd = `git clone --branch ${branch} --depth ${depth} ${cloneUrl} "${rootAbsPath}"`;
@@ -79,19 +95,79 @@ export default async function (fastify: FastifyInstance) {
     } else if ('archiveUrl' in source) {
       return reply.status(501).send({ error: 'Archive download not implemented' });
     } else if ('local' in source) {
-      rootAbsPath = path.join(config.workspaceRoot, 'mounts', source.local.mount, source.local.path);
+      // Standardize: mount local projects under /projects/{projectId}
+      rootAbsPath = path.join(projectsRoot, projectId);
+      try {
+        await fs.access(rootAbsPath);
+      } catch {
+        await fs.mkdir(rootAbsPath, { recursive: true });
+      }
+      // Optionally, copy files from the mount source to the standardized folder (not implemented here)
     } else if ('adopt' in source) {
-      rootAbsPath = path.resolve(source.adopt.path);
+      // Standardize: move or link adopted project to /projects/{projectId}
+      rootAbsPath = path.join(projectsRoot, projectId);
+      try {
+        await fs.access(rootAbsPath);
+      } catch {
+        await fs.mkdir(rootAbsPath, { recursive: true });
+      }
+      // Optionally, copy or move files from the adopted path to the standardized folder (not implemented here)
     }
-    // Salva metadados mínimos
     const project: Project = { id: projectId, name, rootAbsPath };
     await fs.mkdir(projectStateDir, { recursive: true });
     await fs.writeFile(path.join(projectStateDir, `${projectId}.json`), JSON.stringify(project));
     const resp = { project_id: projectId, root: rootAbsPath };
     if (idemKey) idemCache.set(req.method, req.url, idemKey, resp);
     return resp;
+
   });
 
+  // PATCH /projects/:projectId
+  fastify.patch('/:projectId', async (req, reply) => {
+    const { projectId } = req.params as any;
+    const { name: newName } = req.body as { name?: string };
+    if (!newName || typeof newName !== 'string' || !newName.trim()) {
+      return reply.status(400).send({ error: 'Novo nome inválido' });
+    }
+    const metaPath = path.join(projectStateDir, `${projectId}.json`);
+    let project: Project;
+    try {
+      const data = await fs.readFile(metaPath, 'utf-8');
+      project = JSON.parse(data);
+    } catch {
+      return reply.status(404).send({ error: 'Projeto não encontrado' });
+    }
+    const newSlug = slugify(newName);
+    let newProjectId = newSlug;
+    let idx = 1;
+    while (true) {
+      try {
+        if (newProjectId === projectId) break;
+        await fs.access(path.join(projectStateDir, `${newProjectId}.json`));
+        newProjectId = `${newSlug}-${idx++}`;
+      } catch {
+        break;
+      }
+    }
+    // Renomeia pasta se for projeto "git"
+    let newRootAbsPath = project.rootAbsPath;
+    const projectsRoot = path.join(config.workspaceRoot, 'projects');
+    if (project.rootAbsPath.startsWith(projectsRoot + path.sep)) {
+      newRootAbsPath = path.join(projectsRoot, newProjectId);
+      try {
+        await fs.rename(project.rootAbsPath, newRootAbsPath);
+      } catch (e) {
+        return reply.status(500).send({ error: 'Falha ao renomear pasta', details: (e as any).message });
+      }
+    }
+    // Atualiza metadados
+    const newProject: Project = { id: newProjectId, name: newName, rootAbsPath: newRootAbsPath };
+    await fs.writeFile(path.join(projectStateDir, `${newProjectId}.json`), JSON.stringify(newProject));
+    if (newProjectId !== projectId) {
+      await fs.rm(metaPath);
+    }
+    return { project_id: newProjectId, name: newName, root: newRootAbsPath };
+  });
   // GET /projects
   fastify.get('/', async (req, reply) => {
     try {

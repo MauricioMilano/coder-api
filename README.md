@@ -56,7 +56,29 @@ A minimal backend for an autonomous project modification agent to be consumed by
 
 To allow ChatGPT (or any external service) to access your local backend, you must expose your server to the public internet using a tunneling service. This is required because ChatGPT cannot access localhost or private IPs directly.
 
-You can use any tunneling service, such as:
+
+### Exposing with LocalTunnel (Recommended for Quick Testing)
+
+This project includes a script to expose your local server using [localtunnel](https://github.com/localtunnel/localtunnel).
+
+**To start the server and get a public URL:**
+
+```sh
+pnpm tunnel
+```
+
+You will see output like:
+
+```
+Server listening locally on port 3000
+LocalTunnel URL: https://your-subdomain.loca.lt
+```
+
+Use the LocalTunnel URL in ChatGPT or any external client.
+
+---
+
+You can also use other tunneling services, such as:
 
 - [ngrok](https://ngrok.com/)
 - [loca.lt](https://docs.localtunnel.me/)

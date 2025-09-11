@@ -5,6 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn src/server.ts",
+    "tunnel": "ts-node start-with-tunnel.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint . --ext .ts"
@@ -22,10 +23,12 @@
     "fastify": "^4.25.0",
     "fastify-swagger": "^5.2.0",
     "fastify-swagger-ui": "^1.0.1",
+    "ngrok": "^5.0.0-beta.2",
     "pino": "^8.17.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@types/localtunnel": "^2.0.4",
     "@types/node": "^20.10.0",
     "@typescript-eslint/eslint-plugin": "^6.7.0",
     "@typescript-eslint/parser": "^6.7.0",

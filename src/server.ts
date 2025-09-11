@@ -23,6 +23,30 @@ server.register(import('./routes/filetree'), { prefix: '/projects/:projectId/fil
 server.register(import('./routes/files'), { prefix: '/projects/:projectId/files' });
 server.register(import('./routes/bash'), { prefix: '/projects/:projectId/bash' });
 
+
+// Serve openapi.json at /openapi
+
+import { readFileSync } from 'fs';
+import { join } from 'path';
+server.get('/openapi', async (request, reply) => {
+  const openapiPath = join(__dirname, '../openapi.json');
+  const openapiRaw = readFileSync(openapiPath, 'utf-8');
+  let openapi;
+  try {
+    openapi = JSON.parse(openapiRaw);
+  } catch (e) {
+    reply.code(500).send({ error: 'Failed to parse OpenAPI spec' });
+    return;
+  }
+  // Replace the servers[0].url with the current request host
+  const protocol = request.headers['x-forwarded-proto'] || request.protocol;
+  const host = request.headers['host'];
+  if (openapi.servers && openapi.servers.length > 0) {
+    openapi.servers[0].url = `${protocol}://${host}`;
+  }
+  reply.header('Content-Type', 'application/json').send(openapi);
+});
+
 server.setErrorHandler(problemErrorHandler as any);
 
 export default server;
