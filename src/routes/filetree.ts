@@ -21,7 +21,8 @@ export default async function (fastify: FastifyInstance) {
     }
     const { path: userPath, depth, max_entries } = parse.data;
     // Carrega metadados do projeto
-    const stateFile = path.join('.state', `${(req.params as any).projectId}.json`);
+  const { config } = require('../config');
+  const stateFile = path.join(config.workspaceRoot, '.state', `${(req.params as any).projectId}.json`);
     let project: Project;
     try {
       project = JSON.parse(await fs.readFile(stateFile, 'utf-8'));
