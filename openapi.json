@@ -322,7 +322,7 @@
                   },
                   "content": {
                     "type": "string",
-                    "description": "Content containing the substitution blocks with delimiters '// ------- SEARCH', '// =======', '// +++++++ REPLACE'."
+                    "description": "Content containing the substitution blocks with delimiters '// ------- SEARCH', '// =======', '// +++++++ REPLACE'. You should use it always. The content between '// ------- SEARCH' and '// =======' is the text to be searched, and the content between '// =======' and '// +++++++ REPLACE' is the text to replace it with."
                   }
                 },
                 "required": ["path", "content"]
