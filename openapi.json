@@ -423,6 +423,111 @@
         }
       }
     },
+    "/projects/{projectId}/docker/run": {
+      "post": {
+        "summary": "Build and Run Dockerfile in Project",
+        "operationId": "runProjectDockerfile",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "dockerfilePath": {
+                    "type": "string",
+                    "description": "Path to the Dockerfile within the project.",
+                    "default": "./Dockerfile"
+                  },
+                  "imageName": {
+                    "type": "string",
+                    "description": "Name for the Docker image. If not provided, a default name will be generated."
+                  },
+                  "containerName": {
+                    "type": "string",
+                    "description": "Name for the Docker container. If not provided, a default name will be generated."
+                  },
+                  "buildArgs": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Build arguments to pass to docker build."
+                  },
+                  "runArgs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Runtime arguments to pass to docker run (e.g., ['-p', '8080:80'])."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dockerfile built and container started successfully."
+          },
+          "400": {
+            "description": "Invalid request or Docker command failed."
+          },
+          "404": {
+            "description": "Project not found or Dockerfile not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/docker/status": {
+      "get": {
+        "summary": "Get Docker Container Status",
+        "operationId": "getProjectDockerStatus",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "containerName",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional: Name of the container to get status for. If not provided, lists all containers for the project."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Docker container status returned successfully."
+          },
+          "404": {
+            "description": "Project not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
     "/projects/": {
       "get": {
         "summary": "Get Project",
