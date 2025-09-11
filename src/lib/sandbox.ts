@@ -16,10 +16,21 @@ export async function spawnBash(command: string, opts: {
 }> {
   return new Promise((resolve) => {
     const start = Date.now();
-    const proc = spawn('bash', ['-lc', command], {
+    let shellCommand: string;
+    let shellArgs: string[];
+
+    if (process.platform === 'win32') {
+      shellCommand = 'powershell.exe';
+      shellArgs = ['-Command', command];
+    } else {
+      shellCommand = 'bash';
+      shellArgs = ['-lc', command];
+    }
+
+    const proc = spawn(shellCommand, shellArgs, {
       cwd: opts.cwd,
       env: { ...process.env, ...opts.env },
-      shell: false,
+      shell: false, // We explicitly specify the shellCommand, so we don't need Node.js to spawn another shell
       stdio: ['ignore', 'pipe', 'pipe'],
       detached: false,
     });
