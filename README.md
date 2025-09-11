@@ -61,6 +61,13 @@ To allow ChatGPT (or any external service) to access your local backend, you mus
 
 This project includes a script to expose your local server using [localtunnel](https://github.com/localtunnel/localtunnel).
 
+**You might need to configure the npx package for ngrok.**
+
+```
+npx ngrok config add-authtoken $YOUR_AUTHTOKEN
+```
+
+
 **To start the server and get a public URL:**
 
 ```sh
