@@ -4,7 +4,7 @@ A minimal backend for an autonomous project modification agent to be consumed by
 
 Example: 
 
-![example](./docs/gpt-running.png)
+![example](./docs/gpt_running.png)
 
 ## Features
 
@@ -67,7 +67,7 @@ This project includes a script to expose your local server using [ngrok](https:/
 
 **You might need to configure the npx package for ngrok.**
 
-You must create a ngrok account and get your token. It's free! 
+And to configure, you must create a ngrok account and get your token. It's free! 
 
 After you create your account, go to https://dashboard.ngrok.com to get your token. 
 ![image](./docs/ngrok.png)
@@ -91,7 +91,7 @@ You will see output like:
 ```
 {"level":30,"time":1757608557875,"pid":7446,"hostname":"Mauricio-Pc","msg":"Server listening at http://0.0.0.0:3007"}
 Server listening locally on port 3007
-ChatGPT URL: https://9da9b5af730b.ngrok-free.app/openapi
+ChatGPT URL: https://my123url.ngrok-free.app/openapi
 ```
 
 Use the LocalTunnel URL in ChatGPT or any external client.
@@ -114,7 +114,7 @@ after you import the url, you should see the new tasks that your chatgpt can use
 ![after import](./docs/coder_imported.png)
 
 
-Then save it and use your autonomous Agent
+Then save it and enjoy your autonomous agent.
 
 ## API Usage
 
