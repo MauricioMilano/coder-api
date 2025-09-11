@@ -48,11 +48,9 @@ export default async function (fastify: FastifyInstance) {
       const cached = idemCache.get(req.method, req.url, idemKey);
       if (cached) return reply.send(cached);
     }
-    // Novo id amigável baseado no nome
     let baseId = slugify(name);
     let projectId = baseId;
     let idx = 1;
-    // Garante unicidade
     while (true) {
       try {
         await fs.access(path.join(projectStateDir, `${projectId}.json`));
@@ -62,9 +60,10 @@ export default async function (fastify: FastifyInstance) {
       }
     }
     let rootAbsPath = '';
+    const projectsRoot = path.join(config.workspaceRoot, 'projects');
     if ('git' in source) {
       if (!config.allowNetwork) return reply.status(501).send({ error: 'Network not allowed' });
-      rootAbsPath = path.join(config.workspaceRoot, 'projects', projectId);
+      rootAbsPath = path.join(projectsRoot, projectId);
       try {
         await fs.access(rootAbsPath);
         const files = await fs.readdir(rootAbsPath);
@@ -96,9 +95,23 @@ export default async function (fastify: FastifyInstance) {
     } else if ('archiveUrl' in source) {
       return reply.status(501).send({ error: 'Archive download not implemented' });
     } else if ('local' in source) {
-      rootAbsPath = path.join(config.workspaceRoot, 'mounts', source.local.mount, source.local.path);
+      // Standardize: mount local projects under /projects/{projectId}
+      rootAbsPath = path.join(projectsRoot, projectId);
+      try {
+        await fs.access(rootAbsPath);
+      } catch {
+        await fs.mkdir(rootAbsPath, { recursive: true });
+      }
+      // Optionally, copy files from the mount source to the standardized folder (not implemented here)
     } else if ('adopt' in source) {
-      rootAbsPath = path.resolve(source.adopt.path);
+      // Standardize: move or link adopted project to /projects/{projectId}
+      rootAbsPath = path.join(projectsRoot, projectId);
+      try {
+        await fs.access(rootAbsPath);
+      } catch {
+        await fs.mkdir(rootAbsPath, { recursive: true });
+      }
+      // Optionally, copy or move files from the adopted path to the standardized folder (not implemented here)
     }
     const project: Project = { id: projectId, name, rootAbsPath };
     await fs.mkdir(projectStateDir, { recursive: true });
