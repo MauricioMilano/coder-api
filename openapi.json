@@ -386,6 +386,70 @@
         "summary": "Run Bash in Project",
         "operationId": "runBashCommand",
         "parameters": [
+          { "name": "projectId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "command": { "type": "string" },
+                  "workdir": { "type": "string" },
+                  "timeout_sec": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Command executed successfully." } }
+      }
+    },
+    "/projects/{projectId}/search": {
+      "get": {
+        "summary": "Search inside project files",
+        "operationId": "searchProjectFiles",
+        "parameters": [
+          { "name": "projectId", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "path", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Starting folder (default: /)" },
+          { "name": "query", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Search query (string or regex)" },
+          { "name": "regex", "in": "query", "required": false, "schema": { "type": "boolean" }, "description": "Use regex instead of plain text" },
+          { "name": "case_sensitive", "in": "query", "required": false, "schema": { "type": "boolean" }, "description": "Case sensitivity flag" },
+          { "name": "max_results", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "Maximum number of matches to return" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "file": { "type": "string" },
+                          "line": { "type": "string" },
+                          "line_number": { "type": "integer" },
+                          "match": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+      "post": {
+        "summary": "Run Bash in Project",
+        "operationId": "runBashCommand",
+        "parameters": [
           {
             "name": "projectId",
             "in": "path",
