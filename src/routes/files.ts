@@ -22,8 +22,11 @@ const FileCreateSchema = z.object({
 
 const FilePatchSchema = z.object({
   path: z.string(),
-  content: z.string(),
-  expected_hash: z.string().optional()
+  expected_hash: z.string().optional(),
+  patches: z.array(z.object({
+    search: z.string(),
+    replace: z.string(),
+  }))
 });
 
 const FileDeleteSchema = z.object({
@@ -96,42 +99,35 @@ export default async function (fastify: FastifyInstance) {
       return reply.status(404).send({ error: 'Project not found' });
     }
     const absPath = await safeResolvePath(project.rootAbsPath, parse.data.path);
-    let orig = await fs.readFile(absPath, 'utf-8');
+    let orig = await fs.readFile(absPath, "utf-8");
     if (parse.data.expected_hash && sha256(orig) !== parse.data.expected_hash) {
-      return reply.status(409).send({ error: 'Hash mismatch' });
+      return reply.status(409).send({ error: "Hash mismatch" });
     }
+
     let newContent = orig;
-    const patchPairs: { search: string, replace: string }[] = [];
-    const blockRegex = /\/\/\s*-{6,}\s*SEARCH\s*\n([\s\S]*?)\/\/\s*={6,}\s*\n([\s\S]*?)(?=\/\/\s*\+{6,}\s*REPLACE|$)/g;
-    let match;
-    while ((match = blockRegex.exec(parse.data.content ?? '')) !== null) {
-      const search = match[1].trim();
-      const replace = match[2].trim();
-      patchPairs.push({ search, replace });
+    let allReplaced = true;
+    let bytesWritten = 0;
+
+    for (const { search, replace } of parse.data.patches) {
+      if (!orig.includes(search)) {
+        allReplaced = false;
+        break;
+      }
+      newContent = newContent.replace(search, replace);
+      bytesWritten += Buffer.byteLength(replace);
     }
 
-    if (patchPairs.length === 0) {
+    if (!allReplaced) {
+      await fs.writeFile(absPath, orig);
       return reply.status(400).send({
-        error: 'No valid patch pairs found in content.',
-        format: `Each patch must follow this format:
-
-  // ------ SEARCH
-  <search string>
-  // ====== 
-  <replace string>
-  // ++++++ REPLACE
-
-  Multiple patches can be included in sequence.`
+        error: "Search string not found",
+        message: "No replacements were applied. Original file restored.",
+        failed_patches: parse.data.patches.filter(p => !orig.includes(p.search))
       });
     }
 
-    // Apply all patches in order
-    for (const { search, replace } of patchPairs) {
-      // Use simple string replacement (not regex)
-      newContent = newContent.replace(search, replace);
-    }
     await fs.writeFile(absPath, newContent);
-    return { path: parse.data.path, hash: sha256(newContent), bytes_written: Buffer.byteLength(patchPairs.join("")) };
+    return { path: parse.data.path, hash: sha256(newContent), bytes_written: bytesWritten };
   });
 
   // DELETE /projects/:projectId/paths
