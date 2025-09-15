@@ -22,6 +22,7 @@ server.register(import('./routes/projects'), { prefix: '/projects' });
 server.register(import('./routes/filetree'), { prefix: '/projects/:projectId/filetree' });
 server.register(import('./routes/files'), { prefix: '/projects/:projectId/files' });
 server.register(import('./routes/bash'), { prefix: '/projects/:projectId/bash' });
+server.register(import('./routes/search'), { prefix: '/projects/:projectId/search' });
 
 
 // Serve openapi.json at /openapi
