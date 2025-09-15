@@ -3,7 +3,7 @@
   "info": {
     "title": "Coder API",
     "description": "Collection of Coder API routes for use in Postman.",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "servers": [
     {

@@ -20,6 +20,7 @@ const FileCreateSchema = z.object({
   overwrite: z.boolean().default(false)
 });
 
+// PATCH endpoint now only supports structured patches: { search, replace }[]
 const FilePatchSchema = z.object({
   path: z.string(),
   expected_hash: z.string().optional(),
