@@ -423,15 +423,202 @@
         }
       }
     },
-    "/projects/": {
+    "/projects/{projectId}/checklist": {
       "get": {
-        "summary": "Get Project",
-        "operationId": "getProject",
+        "summary": "List Checklist Items",
+        "operationId": "listChecklistItems",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Project information obtained successfully."
+            "description": "Checklist items listed successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ChecklistItem" }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
+      },
+      "post": {
+        "summary": "Create Checklist Item",
+        "operationId": "createChecklistItem",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "text": { "type": "string" }
+                },
+                "required": ["text"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checklist item created.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistItem" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update Checklist Item",
+        "operationId": "updateChecklistItem",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string" },
+                  "text": { "type": "string" },
+                  "completed": { "type": "boolean" }
+                },
+                "required": ["id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checklist item updated.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistItem" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Checklist Item",
+        "operationId": "deleteChecklistItem",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string" }
+                },
+                "required": ["id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checklist item deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deleted": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/checklist/complete": {
+      "post": {
+        "summary": "Mark Checklist Item Complete",
+        "operationId": "completeChecklistItem",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string" }
+                },
+                "required": ["id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checklist item marked as complete.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistItem" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ChecklistItem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "text": { "type": "string" },
+          "completed": { "type": "boolean" }
+        },
+        "required": ["id", "text", "completed"]
       }
     }
   }
