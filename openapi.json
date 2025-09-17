@@ -446,47 +446,6 @@
         }
       }
     },
-      "post": {
-        "summary": "Run Bash in Project",
-        "operationId": "runBashCommand",
-        "parameters": [
-          {
-            "name": "projectId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "command": {
-                    "type": "string"
-                  },
-                  "workdir": {
-                    "type": "string"
-                  },
-                  "timeout_sec": {
-                    "type": "integer"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Command executed successfully."
-          }
-        }
-      }
-    },
     "/projects/{projectId}/docker/run": {
       "post": {
         "summary": "Build and Run Dockerfile in Project",
