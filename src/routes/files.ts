@@ -26,6 +26,7 @@ const FilePatchSchema = z.object({
   patches: z.array(z.object({
     search: z.string(),
     replace: z.string(),
+    regex: z.boolean().optional().default(false)
   }))
 });
 
@@ -101,6 +102,9 @@ export default async function (fastify: FastifyInstance) {
     const absPath = await safeResolvePath(project.rootAbsPath, parse.data.path);
     let orig = await fs.readFile(absPath, "utf-8");
 
+    // Normalize line endings
+    orig = orig.replace(/\r\n/g, "\n");
+
     if (parse.data.expected_hash && sha256(orig) !== parse.data.expected_hash) {
       return reply.status(409).send({ 
         error: "Hash mismatch", 
@@ -112,9 +116,16 @@ export default async function (fastify: FastifyInstance) {
     let failed: any[] = [];
     let bytesWritten = 0;
 
-    for (const { search } of parse.data.patches) {
-      if (!newContent.includes(search)) {
-        failed.push({ search, reason: "Search string not found in file" });
+    for (const { search, regex } of parse.data.patches) {
+      if (regex) {
+        const re = new RegExp(search, "g");
+        if (!re.test(newContent)) {
+          failed.push({ search, reason: "Regex did not match any content" });
+        }
+      } else {
+        if (!newContent.includes(search)) {
+          failed.push({ search, reason: "Search string not found in file" });
+        }
       }
     }
 
@@ -127,8 +138,13 @@ export default async function (fastify: FastifyInstance) {
     }
 
     // Apply all patches
-    for (const { search, replace } of parse.data.patches) {
-      newContent = newContent.replace(search, replace);
+    for (const { search, replace, regex } of parse.data.patches) {
+      if (regex) {
+        const re = new RegExp(search, "g");
+        newContent = newContent.replace(re, replace);
+      } else {
+        newContent = newContent.replace(search, replace);
+      }
       bytesWritten += Buffer.byteLength(replace);
     }
 
