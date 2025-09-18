@@ -298,7 +298,7 @@
       },
       "patch": {
         "summary": "Edit Project File",
-        "description": "Edit a file within a project by searching for specific blocks of text and replacing them. The request body must include the file path and the content with substitution delimiters: '// ------- SEARCH', '// =======', and '// +++++++ REPLACE'. The text between '// ------- SEARCH' and '// =======' is the text to search for, and the text between '// =======' and '// +++++++ REPLACE' is the replacement text. Multiple substitutions can be included in a single request.",
+        "description": "Edit a file within a project by searching for specific blocks of text and replacing them.",
         "operationId": "editProjectFile",
         "parameters": [
           {
