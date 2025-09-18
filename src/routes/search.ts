@@ -77,7 +77,8 @@ export default async function (fastify: FastifyInstance) {
                 const haystack = data.case_sensitive ? line : line.toLowerCase();
                 const needle = data.case_sensitive ? data.query : data.query.toLowerCase();
                 if (haystack.includes(needle)) {
-                  matches = [data.query];
+                  const index = haystack.indexOf(needle);
+                  matches = [line.substr(index, data.query.length)];
                 }
               }
 
