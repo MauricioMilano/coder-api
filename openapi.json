@@ -298,6 +298,7 @@
       },
       "patch": {
         "summary": "Edit Project File",
+        "description": "Edit a file within a project by searching for specific blocks of text and replacing them. The request body must include the file path and the content with substitution delimiters: '// ------- SEARCH', '// =======', and '// +++++++ REPLACE'. The text between '// ------- SEARCH' and '// =======' is the text to search for, and the text between '// =======' and '// +++++++ REPLACE' is the replacement text. Multiple substitutions can be included in a single request.",
         "operationId": "editProjectFile",
         "parameters": [
           {
@@ -318,18 +319,35 @@
                 "properties": {
                   "path": {
                     "type": "string",
-                    "description": "Path of the file to be edited."
+                    "description": "Relative path to the file to be edited within the project root."
                   },
-                  "content": {
-                    "type": "string",
-                    "description": "Content containing the substitution blocks with delimiters '// ------- SEARCH', '// =======', '// +++++++ REPLACE'. You should use it always. The content between '// ------- SEARCH' and '// =======' is the text to be searched, and the content between '// =======' and '// +++++++ REPLACE' is the text to replace it with."
+                  "patches": {
+                    "type": "array",
+                    "description": "Array of patch objects, each with a 'search' string and a 'replace' string.",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "search": { "type": "string", "description": "Text to search for in the file." },
+                        "replace": { "type": "string", "description": "Text to replace the search string with." }
+                      },
+                      "required": ["search", "replace"]
+                    }
                   }
                 },
-                "required": ["path", "content"]
+                "required": ["path", "patches"]
               },
               "example": {
-                "path": "src/example.txt",
-                "content": "// ------- SEARCH\nimport { Communication } from \"./pages/Communication\";\n// =======\nimport CommunicationPage from \"./pages/Communication\";\n// +++++++ REPLACE\n// ------- SEARCH\n<Route path=\"/communication\" element={<Communication />} />\n// =======\n<Route path=\"/communication\" element={<CommunicationPage />} />\n// +++++++ REPLACE\n"
+                "path": "src/pages/Communication.tsx",
+                "patches": [
+                  {
+                    "search": "import { Communication } from \"./pages/Communication\";",
+                    "replace": "import CommunicationPage from \"./pages/Communication\";"
+                  },
+                  {
+                    "search": "console.log('Old log');",
+                    "replace": "console.log('New log message!');"
+                  }
+                ]
               }
             }
           }
