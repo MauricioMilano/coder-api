@@ -2,15 +2,17 @@ import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import path from 'path';
 import fs from 'fs/promises';
+import fsSync from 'fs';
+import readline from 'readline';
 import { safeResolvePath } from '../lib/fs-safe';
 import { Project } from '../types/common';
 
 const SearchQuery = z.object({
   path: z.string().default('/'),
   query: z.string().min(1),
-  regex: z.boolean().default(false),
-  case_sensitive: z.boolean().default(false),
-  max_results: z.number().default(200)
+  regex: z.coerce.boolean().default(false),
+  case_sensitive: z.coerce.boolean().default(false),
+  max_results: z.coerce.number().default(200)
 });
 
 export default async function (fastify: FastifyInstance) {
@@ -20,7 +22,6 @@ export default async function (fastify: FastifyInstance) {
       return reply.status(422).send({ error: 'Validation error', details: parse.error.errors });
     }
 
-    // parse.success is true, so parse.data is defined
     const data = parse.data;
 
     const { config } = require('../config');
@@ -42,31 +43,61 @@ export default async function (fastify: FastifyInstance) {
       for (const entry of entries) {
         if (entry.name === '.git' || entry.name === 'node_modules') continue;
         const fullPath = path.join(dir, entry.name);
+
         if (entry.isDirectory()) {
           await walk(fullPath);
         } else if (entry.isFile()) {
-          const content = await fs.readFile(fullPath, 'utf-8').catch(() => '');
-          const lines = content.split(/\r?\n/);
-          for (let i = 0; i < lines.length; i++) {
-            let match = null;
-            if (data.regex) {
-              try {
-                const re = new RegExp(data.query, data.case_sensitive ? '' : 'i');
-                match = lines[i].match(re);
-              } catch (e) {
-                return reply.status(400).send({ error: 'Invalid regex', details: (e as any).message });
+          // detecta binário (heurística simples)
+          try {
+            const buffer = await fs.readFile(fullPath);
+            if (buffer.includes(0)) continue; // ignora arquivos binários
+          } catch {
+            continue;
+          }
+
+          try {
+            const rl = readline.createInterface({
+              input: fsSync.createReadStream(fullPath, { encoding: 'utf-8' }),
+              crlfDelay: Infinity
+            });
+
+            let lineNum = 0;
+            for await (const line of rl) {
+              lineNum++;
+              let matches: RegExpMatchArray | null = null;
+
+              if (data.regex) {
+                try {
+                  const re = new RegExp(data.query, data.case_sensitive ? '' : 'i');
+                  matches = line.match(re);
+                } catch (e) {
+                  return reply.status(400).send({ error: 'Invalid regex', details: (e as any).message });
+                }
+              } else {
+                const haystack = data.case_sensitive ? line : line.toLowerCase();
+                const needle = data.case_sensitive ? data.query : data.query.toLowerCase();
+                if (haystack.includes(needle)) {
+                  matches = [data.query];
+                }
               }
-            } else {
-              const haystack = data.case_sensitive ? lines[i] : lines[i].toLowerCase();
-              const needle = data.case_sensitive ? data.query : data.query.toLowerCase();
-              if (haystack.includes(needle)) match = [data.query];
+
+              if (matches) {
+                for (const m of matches) {
+                  results.push({
+                    file: path.relative(absRoot, fullPath),
+                    line,
+                    line_number: lineNum,
+                    match: m
+                  });
+                  if (results.length >= data.max_results) return;
+                }
+              }
             }
-            if (match) {
-              results.push({ file: path.relative(absRoot, fullPath), line: lines[i], line_number: i + 1, match: match[0] });
-              if (results.length >= data.max_results) return;
-            }
+          } catch {
+            continue; // ignora arquivos ilegíveis
           }
         }
+        if (results.length >= data.max_results) return;
       }
     }
 
