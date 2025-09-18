@@ -20,7 +20,6 @@ const FileCreateSchema = z.object({
   overwrite: z.boolean().default(false)
 });
 
-// PATCH endpoint now only supports structured patches: { search, replace }[]
 const FilePatchSchema = z.object({
   path: z.string(),
   expected_hash: z.string().optional(),
@@ -44,8 +43,8 @@ export default async function (fastify: FastifyInstance) {
       return reply.status(422).send({ error: 'Validation error', details: parse.error.errors });
     }
     const { path: filePath, encoding } = parse.data;
-  const { config } = require('../config');
-  const stateFile = path.join(config.workspaceRoot, '.state', `${(req.params as any).projectId}.json`);
+    const { config } = require('../config');
+    const stateFile = path.join(config.workspaceRoot, '.state', `${(req.params as any).projectId}.json`);
     let project: Project;
     try {
       project = JSON.parse(await fs.readFile(stateFile, 'utf-8'));
@@ -69,8 +68,8 @@ export default async function (fastify: FastifyInstance) {
       const cached = idemCache.get(req.method, req.url, idemKey);
       if (cached) return reply.send(cached);
     }
-  const { config } = require('../config');
-  const stateFile = path.join(config.workspaceRoot, '.state', `${(req.params as any).projectId}.json`);
+    const { config } = require('../config');
+    const stateFile = path.join(config.workspaceRoot, '.state', `${(req.params as any).projectId}.json`);
     let project: Project;
     try {
       project = JSON.parse(await fs.readFile(stateFile, 'utf-8'));
@@ -91,8 +90,8 @@ export default async function (fastify: FastifyInstance) {
     if (!parse.success) {
       return reply.status(422).send({ error: 'Validation error', details: parse.error.errors });
     }
-  const { config } = require('../config');
-  const stateFile = path.join(config.workspaceRoot, '.state', `${(req.params as any).projectId}.json`);
+    const { config } = require('../config');
+    const stateFile = path.join(config.workspaceRoot, '.state', `${(req.params as any).projectId}.json`);
     let project: Project;
     try {
       project = JSON.parse(await fs.readFile(stateFile, 'utf-8'));
@@ -101,37 +100,49 @@ export default async function (fastify: FastifyInstance) {
     }
     const absPath = await safeResolvePath(project.rootAbsPath, parse.data.path);
     let orig = await fs.readFile(absPath, "utf-8");
+
     if (parse.data.expected_hash && sha256(orig) !== parse.data.expected_hash) {
-      return reply.status(409).send({ error: "Hash mismatch" });
+      return reply.status(409).send({ 
+        error: "Hash mismatch", 
+        message: "The file content has changed since your last read. Please fetch the latest version and retry the patch." 
+      });
     }
 
     let newContent = orig;
-    let allReplaced = true;
+    let failed: any[] = [];
     let bytesWritten = 0;
 
-    for (const { search, replace } of parse.data.patches) {
-      if (!orig.includes(search)) {
-        allReplaced = false;
-        break;
+    for (const { search } of parse.data.patches) {
+      if (!newContent.includes(search)) {
+        failed.push({ search, reason: "Search string not found in file" });
       }
+    }
+
+    if (failed.length > 0) {
+      return reply.status(400).send({
+        error: "Some patches failed",
+        message: "No patches were applied. Please fix the invalid patches and try again.",
+        failed_patches: failed
+      });
+    }
+
+    // Apply all patches
+    for (const { search, replace } of parse.data.patches) {
       newContent = newContent.replace(search, replace);
       bytesWritten += Buffer.byteLength(replace);
     }
 
-    if (!allReplaced) {
-      await fs.writeFile(absPath, orig);
-      return reply.status(400).send({
-        error: "Search string not found",
-        message: "No replacements were applied. Original file restored.",
-        failed_patches: parse.data.patches.filter(p => !orig.includes(p.search))
-      });
-    }
-
     await fs.writeFile(absPath, newContent);
-    return { path: parse.data.path, hash: sha256(newContent), bytes_written: bytesWritten };
+
+    return {
+      path: parse.data.path,
+      hash: sha256(newContent),
+      bytes_written: bytesWritten,
+      applied_patches: parse.data.patches.length
+    };
   });
 
-  // DELETE /projects/:projectId/paths
+  // DELETE /projects/:projectId/files
   fastify.delete('/', async (req, reply) => {
     const parse = FileDeleteSchema.safeParse(req.body);
     if (!parse.success) {
@@ -142,8 +153,8 @@ export default async function (fastify: FastifyInstance) {
       const cached = idemCache.get(req.method, req.url, idemKey);
       if (cached) return reply.send(cached);
     }
-  const { config } = require('../config');
-  const stateFile = path.join(config.workspaceRoot, '.state', `${(req.params as any).projectId}.json`);
+    const { config } = require('../config');
+    const stateFile = path.join(config.workspaceRoot, '.state', `${(req.params as any).projectId}.json`);
     let project: Project;
     try {
       project = JSON.parse(await fs.readFile(stateFile, 'utf-8'));

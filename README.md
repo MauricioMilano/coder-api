@@ -121,6 +121,36 @@ after you import the url, you should see the new tasks that your chatgpt can use
 
 Then save it and enjoy your autonomous agent.
 
+## API Endpoints
+
+### Projects
+- `POST /projects` → Criar projeto (git, local, archive, adopt)
+- `PATCH /projects/:projectId` → Renomear projeto
+- `GET /projects` → Listar projetos
+- `GET /projects/:projectId` → Detalhes do projeto
+
+### Files
+- `GET /projects/:projectId/files` → Ler arquivo
+- `POST /projects/:projectId/files` → Criar arquivo
+- `PATCH /projects/:projectId/files` → Editar arquivo (patches `{ search, replace }`)
+- `DELETE /projects/:projectId/files` → Deletar arquivo/pasta
+
+### Filetree
+- `GET /projects/:projectId/filetree` → Listar árvore de arquivos
+
+### Bash
+- `POST /projects/:projectId/bash` → Executar comando shell
+
+### Docker
+- `POST /projects/:projectId/docker/run` → Build & run Dockerfile
+- `GET /projects/:projectId/docker/status` → Status dos containers
+- `POST /projects/:projectId/docker/stop` → Parar containers
+
+### Search
+- `GET /projects/:projectId/search` → Buscar texto/regex em arquivos
+
+---
+
 ## API Usage
 
 See `openapi.json` for the full contract.
