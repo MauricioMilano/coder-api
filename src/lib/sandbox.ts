@@ -16,6 +16,7 @@ export async function spawnBash(command: string, opts: {
 }> {
   return new Promise((resolve) => {
     const start = Date.now();
+
     let shellCommand: string;
     let shellArgs: string[];
 
@@ -23,8 +24,21 @@ export async function spawnBash(command: string, opts: {
       shellCommand = 'powershell.exe';
       shellArgs = ['-Command', command];
     } else {
-      shellCommand = 'bash';
-      shellArgs = ['-lc', command];
+      const which = (cmd: string) => {
+        try {
+          return require('child_process').execSync(`command -v ${cmd}`, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+        } catch {
+          return null;
+        }
+      };
+      const bashPath = which('bash');
+      if (bashPath) {
+        shellCommand = bashPath;
+        shellArgs = ['-lc', command];
+      } else {
+        shellCommand = 'sh';
+        shellArgs = ['-c', command];
+      }
     }
 
     const proc = spawn(shellCommand, shellArgs, {
