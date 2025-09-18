@@ -3,7 +3,7 @@
   "info": {
     "title": "Coder API",
     "description": "Collection of Coder API routes for use in Postman.",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "servers": [
     {
@@ -33,7 +33,7 @@
                 "properties": {
                   "source": {
                     "oneOf": [
-                      {"type": "object", "properties": {"git": {"type": "object", "properties": {"url": {"type": "string"}, "branch": {"type": "string"}, "depth": {"type": "number"}, "token_env": {"type": "string"}}}}},
+                      {"type": "object", "properties": {"git": {"type": "object", "properties": {"url": {"type": "string"}, "branch": {"type": "string"}, "depth": {"type": "number"}, "token_env": {"type": "string"}}, "required": ["url"]}}},
                       {"type": "object", "properties": {"local": {"type": "object", "properties": {"mount": {"type": "string"}, "path": {"type": "string"}}}}},
                       {"type": "object", "properties": {"archiveUrl": {"type": "string", "format": "uri"}, "extract_to": {"type": "string"}}},
                       {"type": "object", "properties": {"adopt": {"type": "object", "properties": {"path": {"type": "string"}}}}}
@@ -298,6 +298,7 @@
       },
       "patch": {
         "summary": "Edit Project File",
+        "description": "Edit a file within a project by searching for specific blocks of text and replacing them.",
         "operationId": "editProjectFile",
         "parameters": [
           {
@@ -318,18 +319,35 @@
                 "properties": {
                   "path": {
                     "type": "string",
-                    "description": "Path of the file to be edited."
+                    "description": "Relative path to the file to be edited within the project root."
                   },
-                  "content": {
-                    "type": "string",
-                    "description": "Content containing the substitution blocks with delimiters '// ------- SEARCH', '// =======', '// +++++++ REPLACE'. You should use it always. The content between '// ------- SEARCH' and '// =======' is the text to be searched, and the content between '// =======' and '// +++++++ REPLACE' is the text to replace it with."
+                  "patches": {
+                    "type": "array",
+                    "description": "Array of patch objects, each with a 'search' string and a 'replace' string.",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "search": { "type": "string", "description": "Text to search for in the file." },
+                        "replace": { "type": "string", "description": "Text to replace the search string with." }
+                      },
+                      "required": ["search", "replace"]
+                    }
                   }
                 },
-                "required": ["path", "content"]
+                "required": ["path", "patches"]
               },
               "example": {
-                "path": "src/example.txt",
-                "content": "// ------- SEARCH\nimport { Communication } from \"./pages/Communication\";\n// =======\nimport CommunicationPage from \"./pages/Communication\";\n// +++++++ REPLACE\n// ------- SEARCH\n<Route path=\"/communication\" element={<Communication />} />\n// =======\n<Route path=\"/communication\" element={<CommunicationPage />} />\n// +++++++ REPLACE\n"
+                "path": "src/pages/Communication.tsx",
+                "patches": [
+                  {
+                    "search": "import { Communication } from \"./pages/Communication\";",
+                    "replace": "import CommunicationPage from \"./pages/Communication\";"
+                  },
+                  {
+                    "search": "console.log('Old log');",
+                    "replace": "console.log('New log message!');"
+                  }
+                ]
               }
             }
           }
@@ -386,14 +404,7 @@
         "summary": "Run Bash in Project",
         "operationId": "runBashCommand",
         "parameters": [
-          {
-            "name": "projectId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "projectId", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "requestBody": {
           "required": true,
@@ -402,23 +413,53 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "command": {
-                    "type": "string"
-                  },
-                  "workdir": {
-                    "type": "string"
-                  },
-                  "timeout_sec": {
-                    "type": "integer"
-                  }
+                  "command": { "type": "string" },
+                  "workdir": { "type": "string" },
+                  "timeout_sec": { "type": "integer" }
                 }
               }
             }
           }
         },
+        "responses": { "200": { "description": "Command executed successfully." } }
+      }
+    },
+    "/projects/{projectId}/search": {
+      "get": {
+        "summary": "Search inside project files",
+        "operationId": "searchProjectFiles",
+        "parameters": [
+          { "name": "projectId", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "path", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Starting folder (default: /)" },
+          { "name": "query", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Search query (string or regex)" },
+          { "name": "regex", "in": "query", "required": false, "schema": { "type": "boolean" }, "description": "Use regex instead of plain text" },
+          { "name": "case_sensitive", "in": "query", "required": false, "schema": { "type": "boolean" }, "description": "Case sensitivity flag" },
+          { "name": "max_results", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "Maximum number of matches to return" }
+        ],
         "responses": {
           "200": {
-            "description": "Command executed successfully."
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "file": { "type": "string" },
+                          "line": { "type": "string" },
+                          "line_number": { "type": "integer" },
+                          "match": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }

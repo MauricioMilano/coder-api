@@ -1,11 +1,13 @@
 import Fastify from 'fastify';
 import dotenv from 'dotenv';
-// Load environment variables from .env file if present
-dotenv.config();
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
 import { config } from './config';
 import { problemErrorHandler } from './lib/problem-handler';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+// Load environment variables from .env file if present
+dotenv.config();
 
 const server = Fastify({
   logger: { level: 'info' },
@@ -23,12 +25,9 @@ server.register(import('./routes/filetree'), { prefix: '/projects/:projectId/fil
 server.register(import('./routes/files'), { prefix: '/projects/:projectId/files' });
 server.register(import('./routes/bash'), { prefix: '/projects/:projectId/bash' });
 server.register(import('./routes/docker'), { prefix: '/projects/:projectId/docker' });
+server.register(import('./routes/search'), { prefix: '/projects/:projectId/search' });
 
 
-// Serve openapi.json at /openapi
-
-import { readFileSync } from 'fs';
-import { join } from 'path';
 server.get('/openapi', async (request, reply) => {
   const openapiPath = join(__dirname, '../openapi.json');
   const openapiRaw = readFileSync(openapiPath, 'utf-8');
