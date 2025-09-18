@@ -1,63 +1,35 @@
-import Fastify from 'fastify';
-import dotenv from 'dotenv';
-// Load environment variables from .env file if present
-dotenv.config();
-import cors from '@fastify/cors';
-import rateLimit from '@fastify/rate-limit';
-import { config } from './config';
-import { problemErrorHandler } from './lib/problem-handler';
+import Fastify from "fastify";
+import cors from "@fastify/cors";
+import rateLimit from "@fastify/rate-limit";
+import projectsRoutes from "./routes/projects";
+import filetreeRoutes from "./routes/filetree";
+import filesRoutes from "./routes/files";
+import bashRoutes from "./routes/bash";
+import dockerRoutes from "./routes/docker";
+import { setupMcpServer } from "./mcp/server";
 
-const server = Fastify({
-  logger: { level: 'info' },
-  genReqId: () => Math.random().toString(36).slice(2),
-});
+const server = Fastify({ logger: true });
 
 server.register(cors, { origin: true });
-server.register(rateLimit, { max: 100, timeWindow: '1 minute' });
+server.register(rateLimit, { max: 100, timeWindow: "1 minute" });
 
+server.register(projectsRoutes, { prefix: "/projects" });
+server.register(filetreeRoutes, { prefix: "/projects/:projectId/filetree" });
+server.register(filesRoutes, { prefix: "/projects/:projectId/files" });
+server.register(bashRoutes, { prefix: "/projects/:projectId/bash" });
+server.register(dockerRoutes, { prefix: "/projects/:projectId/docker" });
 
-
-// Rotas
-server.register(import('./routes/projects'), { prefix: '/projects' });
-server.register(import('./routes/filetree'), { prefix: '/projects/:projectId/filetree' });
-server.register(import('./routes/files'), { prefix: '/projects/:projectId/files' });
-server.register(import('./routes/bash'), { prefix: '/projects/:projectId/bash' });
-server.register(import('./routes/docker'), { prefix: '/projects/:projectId/docker' });
-
-
-// Serve openapi.json at /openapi
-
-import { readFileSync } from 'fs';
-import { join } from 'path';
-server.get('/openapi', async (request, reply) => {
-  const openapiPath = join(__dirname, '../openapi.json');
-  const openapiRaw = readFileSync(openapiPath, 'utf-8');
-  let openapi;
-  try {
-    openapi = JSON.parse(openapiRaw);
-  } catch (e) {
-    reply.code(500).send({ error: 'Failed to parse OpenAPI spec' });
-    return;
-  }
-  // Replace the servers[0].url with the current request host
-  const protocol = request.headers['x-forwarded-proto'] || request.protocol;
-  const host = request.headers['host'];
-  if (openapi.servers && openapi.servers.length > 0) {
-    openapi.servers[0].url = `${protocol}://${host}`;
-  }
-  reply.header('Content-Type', 'application/json').send(openapi);
+server.get("/openapi", async (_, reply) => {
+  const openapi = require("../openapi.json");
+  return reply.send(openapi);
 });
 
-server.setErrorHandler(problemErrorHandler as any);
-
-export default server;
+// 🚀 Start MCP server alongside Fastify
+const mcpServer = setupMcpServer();
+mcpServer.listen(); // transport can be configured (stdio, http, ws)
 
 if (require.main === module) {
-  server.listen({ port: config.port, host: '0.0.0.0' }, (err, address) => {
-    if (err) {
-      server.log.error(err);
-      process.exit(1);
-    }
-    server.log.info(`Server listening at ${address}`);
-  });
+  server.listen({ port: 3000, host: "0.0.0.0" });
 }
+
+export default server;
