@@ -33,7 +33,7 @@
                 "properties": {
                   "source": {
                     "oneOf": [
-                      {"type": "object", "properties": {"git": {"type": "object", "properties": {"url": {"type": "string"}, "branch": {"type": "string"}, "depth": {"type": "number"}, "token_env": {"type": "string"}}}}},
+                      {"type": "object", "properties": {"git": {"type": "object", "properties": {"url": {"type": "string"}, "branch": {"type": "string"}, "depth": {"type": "number"}, "token_env": {"type": "string"}}, "required": ["url"]}}},
                       {"type": "object", "properties": {"local": {"type": "object", "properties": {"mount": {"type": "string"}, "path": {"type": "string"}}}}},
                       {"type": "object", "properties": {"archiveUrl": {"type": "string", "format": "uri"}, "extract_to": {"type": "string"}}},
                       {"type": "object", "properties": {"adopt": {"type": "object", "properties": {"path": {"type": "string"}}}}}

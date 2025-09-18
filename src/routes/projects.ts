@@ -19,7 +19,7 @@ function slugify(str: string) {
 const projectStateDir = path.join(config.workspaceRoot, '.state');
 
 const ProjectSourceSchema = z.union([
-  z.object({ git: z.object({ url: z.string(), branch: z.string().default('main'), depth: z.number().default(1), token_env: z.string().optional() }) }),
+  z.object({ git: z.object({ url: z.string(), branch: z.string().default('main'), depth: z.number().optional(), token_env: z.string().optional() }) }),
   z.object({ local: z.object({ mount: z.string(), path: z.string() }) }),
   z.object({ archiveUrl: z.string().url(), extract_to: z.string() }),
   z.object({ adopt: z.object({ path: z.string() }) })
@@ -78,7 +78,9 @@ export default async function (fastify: FastifyInstance) {
       if (token_env && process.env[token_env]) {
         cloneUrl = url.replace('https://', `https://${process.env[token_env]}@`);
       }
-      const gitCmd = `git clone --branch ${branch} --depth ${depth} ${cloneUrl} "${rootAbsPath}"`;
+
+      const depthCommand = depth && depth > 0 ? `--depth ${depth}` : '';
+      const gitCmd = `git clone --branch ${branch} ${depthCommand} ${cloneUrl} "${rootAbsPath}"`;
       try {
         await new Promise((resolve, reject) => {
           exec(gitCmd, (error, stdout, stderr) => {
