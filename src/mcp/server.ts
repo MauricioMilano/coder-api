@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server";
+import { McpServer } from "@modelcontextprotocol/sdk";
 import { filesMcp } from "./files";
 import { projectsMcp } from "./projects";
 import { filetreeMcp } from "./filetree";
