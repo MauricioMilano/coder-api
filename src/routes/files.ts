@@ -52,6 +52,13 @@ export default async function (fastify: FastifyInstance) {
     } catch {
       return reply.status(404).send({ error: 'Project not found' });
     }
+    const stateFile = path.join(config.workspaceRoot, '.state', `${(req.params as any).projectId}.json`);
+    let project: Project;
+    try {
+      project = JSON.parse(await fs.readFile(stateFile, 'utf-8'));
+    } catch {
+      return reply.status(404).send({ error: 'Project not found' });
+    }
     const absPath = await safeResolvePath(project.rootAbsPath, filePath);
     const content = await readFileSafe(absPath, encoding);
     const hash = sha256(content);
@@ -88,6 +95,10 @@ export default async function (fastify: FastifyInstance) {
   // PATCH /projects/:projectId/files
   fastify.patch('/', async (req, reply) => {
     const parse = FilePatchSchema.safeParse(req.body);
+  if (!parse.success) {
+    return reply.status(422).send({ error: 'Validation error', details: parse.error.errors });
+  }
+
     if (!parse.success) {
       return reply.status(422).send({ error: 'Validation error', details: parse.error.errors });
     }
@@ -105,7 +116,7 @@ export default async function (fastify: FastifyInstance) {
     // Normalize line endings
     orig = orig.replace(/\r\n/g, "\n");
 
-    if (parse.data.expected_hash && sha256(orig) !== parse.data.expected_hash) {
+    // removed hash comparison
       return reply.status(409).send({ 
         error: "Hash mismatch", 
         message: "The file content has changed since your last read. Please fetch the latest version and retry the patch." 
@@ -116,7 +127,7 @@ export default async function (fastify: FastifyInstance) {
     let failed: any[] = [];
     let bytesWritten = 0;
 
-    for (const { search, regex } of parse.data.patches) {
+    for (const { search, replace, regex } of parse.data.patches) {
       if (regex) {
         const re = new RegExp(search, "g");
         if (!re.test(newContent)) {
