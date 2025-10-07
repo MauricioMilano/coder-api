@@ -1,41 +1,71 @@
-import Fastify from 'fastify';
+import express, { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 // Load environment variables from .env file if present
 dotenv.config();
-import cors from '@fastify/cors';
-import rateLimit from '@fastify/rate-limit';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
+import pino from 'pino';
 import { config } from './config';
 import { problemErrorHandler } from './lib/problem-handler';
 
-const server = Fastify({
-  logger: { level: 'info' },
-  genReqId: () => Math.random().toString(36).slice(2),
+const server = express();
+
+// Logger setup
+const logger = pino({ level: 'info' });
+
+// Simple logging middleware
+server.use((req: Request, res: Response, next: NextFunction) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    logger.info({
+      method: req.method,
+      url: req.url,
+      status: res.statusCode,
+      duration: `${duration}ms`
+    });
+  });
+  next();
 });
 
-server.register(cors, { origin: true });
-server.register(rateLimit, { max: 100, timeWindow: '1 minute' });
+// Middleware
+server.use(cors({ origin: true }));
+server.use(express.json({ limit: `${config.maxUploadMb}mb` }));
+server.use(express.urlencoded({ extended: true }));
 
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // limit each IP to 100 requests per windowMs
+});
+server.use(limiter);
 
+// Request ID middleware
+server.use((req: Request, res: Response, next: NextFunction) => {
+  (req as any).id = Math.random().toString(36).slice(2);
+  next();
+});
 
 // Rotas
-server.register(import('./routes/projects'), { prefix: '/projects' });
-server.register(import('./routes/filetree'), { prefix: '/projects/:projectId/filetree' });
-server.register(import('./routes/files'), { prefix: '/projects/:projectId/files' });
-server.register(import('./routes/bash'), { prefix: '/projects/:projectId/bash' });
+server.use('/projects', require('./routes/projects'));
+server.use('/projects/:projectId/filetree', require('./routes/filetree'));
+server.use('/projects/:projectId/files', require('./routes/files'));
+server.use('/projects/:projectId/bash', require('./routes/bash'));
 
 
 // Serve openapi.json at /openapi
 
 import { readFileSync } from 'fs';
 import { join } from 'path';
-server.get('/openapi', async (request, reply) => {
+
+server.get('/openapi', async (request: Request, response: Response) => {
   const openapiPath = join(__dirname, '../openapi.json');
   const openapiRaw = readFileSync(openapiPath, 'utf-8');
   let openapi;
   try {
     openapi = JSON.parse(openapiRaw);
   } catch (e) {
-    reply.code(500).send({ error: 'Failed to parse OpenAPI spec' });
+    response.status(500).json({ error: 'Failed to parse OpenAPI spec' });
     return;
   }
   // Replace the servers[0].url with the current request host
@@ -44,19 +74,16 @@ server.get('/openapi', async (request, reply) => {
   if (openapi.servers && openapi.servers.length > 0) {
     openapi.servers[0].url = `${protocol}://${host}`;
   }
-  reply.header('Content-Type', 'application/json').send(openapi);
+  response.setHeader('Content-Type', 'application/json').json(openapi);
 });
 
-server.setErrorHandler(problemErrorHandler as any);
+// Error handler middleware (must be last)
+server.use(problemErrorHandler);
 
 export default server;
 
 if (require.main === module) {
-  server.listen({ port: config.port, host: '0.0.0.0' }, (err, address) => {
-    if (err) {
-      server.log.error(err);
-      process.exit(1);
-    }
-    server.log.info(`Server listening at ${address}`);
+  server.listen(config.port, '0.0.0.0', () => {
+    logger.info(`Server listening at http://0.0.0.0:${config.port}`);
   });
 }

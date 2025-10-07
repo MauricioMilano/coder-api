@@ -1,17 +1,19 @@
-import { FastifyInstance } from 'fastify';
+import { Router, Request, Response } from 'express';
 
-export default async function (fastify: FastifyInstance) {
+const router = Router();
+
+const initRoutes = async () => {
   const { createProject, renameProject, listProjects, getProject } = await import('../core/projects');
 
   // POST /projects
-  fastify.post('/', async (req, reply) => {
+  router.post('/', async (req: Request, res: Response) => {
     try {
-      const { source, name } = req.body as any;
+      const { source, name } = req.body;
       const idemKey = req.headers['idempotency-key'] as string | undefined;
       const result = await createProject(source, name, idemKey);
-      return reply.send(result);
+      return res.json(result);
     } catch (err: any) {
-      return reply.status(err.statusCode || 500).send({
+      return res.status(err.statusCode || 500).json({
         error: err.message || 'Error creating project',
         details: err.details,
       });
@@ -19,14 +21,14 @@ export default async function (fastify: FastifyInstance) {
   });
 
   // PATCH /projects/:projectId
-  fastify.patch('/:projectId', async (req, reply) => {
+  router.patch('/:projectId', async (req: Request, res: Response) => {
     try {
-      const { projectId } = req.params as any;
-      const { name: newName } = req.body as any;
+      const { projectId } = req.params;
+      const { name: newName } = req.body;
       const result = await renameProject(projectId, newName);
-      return reply.send(result);
+      return res.json(result);
     } catch (err: any) {
-      return reply.status(err.statusCode || 500).send({
+      return res.status(err.statusCode || 500).json({
         error: err.message || 'Error renaming project',
         details: err.details,
       });
@@ -34,12 +36,12 @@ export default async function (fastify: FastifyInstance) {
   });
 
   // GET /projects
-  fastify.get('/', async (_req, reply) => {
+  router.get('/', async (_req: Request, res: Response) => {
     try {
       const projects = await listProjects();
-      return reply.send(projects);
+      return res.json(projects);
     } catch (err: any) {
-      return reply.status(err.statusCode || 500).send({
+      return res.status(err.statusCode || 500).json({
         error: err.message || 'Error listing projects',
         details: err.details,
       });
@@ -47,16 +49,20 @@ export default async function (fastify: FastifyInstance) {
   });
 
   // GET /projects/:projectId
-  fastify.get('/:projectId', async (req, reply) => {
+  router.get('/:projectId', async (req: Request, res: Response) => {
     try {
-      const { projectId } = req.params as any;
+      const { projectId } = req.params;
       const project = await getProject(projectId);
-      return reply.send(project);
+      return res.json(project);
     } catch (err: any) {
-      return reply.status(err.statusCode || 500).send({
+      return res.status(err.statusCode || 500).json({
         error: err.message || 'Error fetching project',
         details: err.details,
       });
     }
   });
-}
+};
+
+initRoutes();
+
+module.exports = router;
