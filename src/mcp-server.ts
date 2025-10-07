@@ -239,38 +239,43 @@ mcpServer.registerTool(
 
 // 3. Bash Command Tool
 mcpServer.registerTool(
-  'run-bash',
-  {
-    title: 'Run Bash Command',
-    description: 'Execute a bash command in a project directory',
-    inputSchema: {
-      projectId: z.string(),
-      command: z.string(),
-      workdir: z.string().default('/'),
-      timeout_sec: z.number().default(120),
-      env: z.record(z.string()).optional()
+    'run-bash',
+    {
+        title: 'Run Bash Command',
+        description: 'Execute a bash command in a project directory',
+        inputSchema: {
+            projectId: z.string(),
+            command: z.string(),
+            workdir: z.string().default('/'),
+            timeout_sec: z.number().default(120),
+            env: z.record(z.string()).optional()
+        },
+        outputSchema: {
+            stdout: z.string(),
+            stderr: z.string(),
+            exit_code: z.number(),
+            duration_ms: z.number(),
+            truncated: z.object({
+                stdout: z.boolean(),
+                stderr: z.boolean()
+            })
+        }
     },
-    outputSchema: {
-      stdout: z.string(),
-      stderr: z.string(),
-      exit_code: z.number(),
-      timed_out: z.boolean()
+    async ({ projectId, command, workdir, timeout_sec, env }) => {
+        try {
+            const result = await runBashCommand(projectId, { command, workdir, timeout_sec, env });
+            const { stdout, stderr, exit_code, duration_ms, truncated } = result;
+            return {
+                content: [{ type: 'text', text: JSON.stringify({ stdout, stderr, exit_code, duration_ms, truncated }) }],
+                structuredContent: { stdout, stderr, exit_code, duration_ms, truncated }
+            };
+        } catch (error: any) {
+            return {
+                content: [{ type: 'text', text: `Error: ${error.message || JSON.stringify(error)}` }],
+                isError: true
+            };
+        }
     }
-  },
-  async ({ projectId, command, workdir, timeout_sec, env }) => {
-    try {
-      const result = await runBashCommand(projectId, { command, workdir, timeout_sec, env });
-      return {
-        content: [{ type: 'text', text: JSON.stringify(result) }],
-        structuredContent: result
-      };
-    } catch (error: any) {
-      return {
-        content: [{ type: 'text', text: `Error: ${error.message || JSON.stringify(error)}` }],
-        isError: true
-      };
-    }
-  }
 );
 
 // 4. Data Retrieval Tools (converted from resources to tools)
