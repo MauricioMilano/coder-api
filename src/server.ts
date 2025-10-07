@@ -58,7 +58,7 @@ server.use('/projects/:projectId/bash', require('./routes/bash'));
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-server.get('/openapi', async (request: Request, response: Response) => {
+server.get('/openapi*', async (request: Request, response: Response) => {
   const openapiPath = join(__dirname, '../openapi.json');
   const openapiRaw = readFileSync(openapiPath, 'utf-8');
   let openapi;
