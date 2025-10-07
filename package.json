@@ -14,11 +14,12 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.19.1",
     "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "express-rate-limit": "^7.1.5",
     "diff": "^8.0.2",
     "dotenv": "^17.2.2",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
     "ngrok": "^5.0.0-beta.2",
     "pino": "^8.17.0",
     "zod": "^3.22.4"
