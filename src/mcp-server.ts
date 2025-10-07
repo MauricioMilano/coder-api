@@ -1,4 +1,4 @@
-import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { z } from 'zod';
 import express from 'express';
@@ -273,149 +273,101 @@ mcpServer.registerTool(
   }
 );
 
-// RESOURCES - Data that can be read by the LLM
+// 4. Data Retrieval Tools (converted from resources to tools)
 
-// 1. Projects List Resource
-mcpServer.registerResource(
-  'projects',
-  'projects://list',
+mcpServer.registerTool(
+  'list-projects',
   {
-    title: 'Projects List',
-    description: 'List of all projects',
-    mimeType: 'application/json'
+    title: 'List Projects',
+    description: 'Get a list of all projects',
+    inputSchema: {},
+    outputSchema: {
+      projects: z.array(z.object({
+        id: z.string(),
+        name: z.string(),
+        rootAbsPath: z.string()
+      }))
+    }
   },
-  async (uri) => {
+  async () => {
     try {
       const projects = await listProjects();
       return {
-        contents: [
-          {
-            uri: uri.href,
-            text: JSON.stringify(projects, null, 2)
-          }
-        ]
+        content: [{ type: 'text', text: JSON.stringify({ projects }, null, 2) }],
+        structuredContent: { projects }
       };
     } catch (error: any) {
       return {
-        contents: [
-          {
-            uri: uri.href,
-            text: `Error: ${error.message || JSON.stringify(error)}`
-          }
-        ]
+        content: [{ type: 'text', text: `Error: ${error.message || JSON.stringify(error)}` }],
+        isError: true
       };
     }
   }
 );
 
-// 2. Project Details Resource
-mcpServer.registerResource(
-  'project-details',
-  new ResourceTemplate('project://{projectId}', { list: undefined }),
+mcpServer.registerTool(
+  'get-project-details',
   {
-    title: 'Project Details',
-    description: 'Details of a specific project'
+    title: 'Get Project Details',
+    description: 'Get detailed information about a specific project',
+    inputSchema: {
+      projectId: z.string()
+    },
+    outputSchema: {
+      id: z.string(),
+      name: z.string(),
+      rootAbsPath: z.string()
+    }
   },
-  async (uri, { projectId }) => {
+  async ({ projectId }) => {
     try {
-      const project = await getProject(Array.isArray(projectId) ? projectId[0] : projectId);
+      const project = await getProject(projectId);
       return {
-        contents: [
-          {
-            uri: uri.href,
-            text: JSON.stringify(project, null, 2)
-          }
-        ]
+        content: [{ type: 'text', text: JSON.stringify(project, null, 2) }],
+        structuredContent: project
       };
     } catch (error: any) {
       return {
-        contents: [
-          {
-            uri: uri.href,
-            text: `Error: ${error.message || JSON.stringify(error)}`
-          }
-        ]
+        content: [{ type: 'text', text: `Error: ${error.message || JSON.stringify(error)}` }],
+        isError: true
       };
     }
   }
 );
 
-// 3. File Tree Resource
-mcpServer.registerResource(
-  'filetree',
-  new ResourceTemplate('filetree://{projectId}?path={path}&depth={depth}', { 
-    list: undefined,
-    complete: {
-      path: (value) => ['/src', '/docs', '/test', '/lib'].filter(p => p.startsWith(value)),
-      depth: (value) => ['1', '2', '3', '4', '5'].filter(d => d.startsWith(value))
-    }
-  }),
+mcpServer.registerTool(
+  'list-filetree',
   {
-    title: 'Project File Tree',
-    description: 'File tree structure of a project'
+    title: 'List File Tree',
+    description: 'Get the file tree structure of a project',
+    inputSchema: {
+      projectId: z.string(),
+      path: z.string().default('/'),
+      depth: z.number().default(2),
+      maxEntries: z.number().default(2000)
+    },
+    outputSchema: {
+      files: z.array(z.string()),
+      truncated: z.boolean()
+    }
   },
-  async (uri, { projectId, path = '/', depth = '2' }) => {
+  async ({ projectId, path = '/', depth = 2, maxEntries = 2000 }) => {
     try {
-      const project = await getProject(Array.isArray(projectId) ? projectId[0] : projectId);
-      const pathStr = Array.isArray(path) ? path[0] : path;
-      const depthStr = Array.isArray(depth) ? depth[0] : depth;
+      const project = await getProject(projectId);
       const options: FiletreeOptions = {
-        path: pathStr,
-        depth: parseInt(depthStr, 10),
-        max_entries: 2000
+        path,
+        depth,
+        max_entries: maxEntries
       };
       const result = await listFiletree(project, options);
       return {
-        contents: [
-          {
-            uri: uri.href,
-            text: JSON.stringify(result, null, 2)
-          }
-        ]
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+        structuredContent: result
       };
     } catch (error: any) {
       return {
-        contents: [
-          {
-            uri: uri.href,
-            text: `Error: ${error.message || JSON.stringify(error)}`
-          }
-        ]
-      };
-    }
-  }
-);
-
-// 4. File Content Resource
-mcpServer.registerResource(
-  'file-content',
-  new ResourceTemplate('file://{projectId}/{filePath}', { list: undefined }),
-  {
-    title: 'File Content',
-    description: 'Content of a specific file in a project'
-  },
-  async (uri, { projectId, filePath }) => {
-    try {
-      const project = await getProject(Array.isArray(projectId) ? projectId[0] : projectId);
-      const filePathStr = Array.isArray(filePath) ? filePath[0] : filePath;
-      const result = await getFile(project, filePathStr, 'text');
-      return {
-        contents: [
-          {
-            uri: uri.href,
-            text: result.content,
-            mimeType: 'text/plain'
-          }
-        ]
-      };
-    } catch (error: any) {
-      return {
-        contents: [
-          {
-            uri: uri.href,
-            text: `Error: ${error.message || JSON.stringify(error)}`
-          }
-        ]
+        content: [{ type: 'text', text: `Error: ${error.message || JSON.stringify(error)}` }],
+        isError: true
       };
     }
   }

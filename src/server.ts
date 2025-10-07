@@ -200,13 +200,10 @@ server.get('/capabilities', (req: Request, res: Response) => {
           'create-file',
           'delete-file',
           'patch-file',
-          'run-bash'
-        ],
-        resources: [
-          'projects://list',
-          'project://{projectId}',
-          'filetree://{projectId}',
-          'file://{projectId}/{filePath}'
+          'run-bash',
+          'list-projects',
+          'get-project-details',
+          'list-filetree'
         ]
       }
     },
