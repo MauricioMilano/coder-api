@@ -8,7 +8,7 @@ Coder-API bridges the gap between AI models and code execution, providing a comp
 - 🔧 **Project Management**: Clone repositories, create projects, manage workspaces
 - 📁 **File Operations**: Read, write, patch, and organize code files with precision
 - ⚡ **Code Execution**: Run bash commands and scripts in isolated project environments  
-- 🤖 **AI-First Design**: Native MCP support with automatic tool discovery for LLMs
+- 🤖 **AI Design**: Built with MCP support with automatic tool discovery for LLMs
 - 🛡️ **Secure Sandbox**: All operations confined to designated workspace directories
 - 🌐 **Flexible Deployment**: Local development, cloud platforms, or tunneled access
 
@@ -92,6 +92,5 @@ Standardized protocol for AI assistant integration.
 
 1. Fork and clone the repo.
 2. Create a feature branch.
-3. Add tests for new features (see `tests/` if available).
-4. Run `pnpm lint` before submitting a PR.
-5. Open a pull request with a clear description.
+
+3. Open a pull request with a clear description.
