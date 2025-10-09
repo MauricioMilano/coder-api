@@ -1,6 +1,16 @@
 # Coder-API
 
-A backend for an autonomous agent to be used through the ChatGPT UI. 
+**A powerful backend service that enables AI assistants to autonomously manage, modify, and execute code projects through secure sandboxed environments.**
+
+Coder-API bridges the gap between AI models and code execution, providing a comprehensive toolkit for project management, file operations, and command execution. Built with dual protocol support (REST API + Model Context Protocol), it seamlessly integrates with ChatGPT, GitHub Copilot, and other AI assistants to enable autonomous coding workflows.
+
+**Key Capabilities:**
+- 🔧 **Project Management**: Clone repositories, create projects, manage workspaces
+- 📁 **File Operations**: Read, write, patch, and organize code files with precision
+- ⚡ **Code Execution**: Run bash commands and scripts in isolated project environments  
+- 🤖 **AI-First Design**: Native MCP support with automatic tool discovery for LLMs
+- 🛡️ **Secure Sandbox**: All operations confined to designated workspace directories
+- 🌐 **Flexible Deployment**: Local development, cloud platforms, or tunneled access
 
 ![architecture](./docs/pictures/core/architecture.png)
 
