@@ -1,172 +1,96 @@
 # Coder-API
 
-A backend for an autonomous agent to be used through the ChatGPT UI. 
+**A powerful backend service that enables AI assistants to autonomously manage, modify, and execute code projects through secure sandboxed environments.**
 
-![example](./docs/gpt_running.png)
+Coder-API bridges the gap between AI models and code execution, providing a comprehensive toolkit for project management, file operations, and command execution. Built with dual protocol support (REST API + Model Context Protocol), it seamlessly integrates with ChatGPT, GitHub Copilot, and other AI assistants to enable autonomous coding workflows.
 
-## How it works
-- Coder-API runs on your computer and lets you access your files, folders, terminal.
-- A tunnel connects your local API to the internet using Ngrok.
-- Ngrok creates a link so that external services (like GPT) can reach your Coder-API.
-- GPT (or other AI tools) can now interact with your computer’s resources by sending requests through this tunnel.
-![architecture](./docs/architecture.png)
+**Key Capabilities:**
+- 🔧 **Project Management**: Clone repositories, create projects, manage workspaces
+- 📁 **File Operations**: Read, write, patch, and organize code files with precision
+- ⚡ **Code Execution**: Run bash commands and scripts in isolated project environments  
+- 🤖 **AI Design**: Built with MCP support with automatic tool discovery for LLMs
+- 🛡️ **Secure Sandbox**: All operations confined to designated workspace directories
+- 🌐 **Flexible Deployment**: Local development, cloud platforms, or tunneled access
+
+![architecture](./docs/pictures/core/architecture.png)
 
 ## Features
 
-- Fastify server with REST API for project and file management
-- TypeScript, Zod validation, Pino logging
-- File operations, bash execution, and project isolation
+The server provides the following capabilities:
+
+#### Project Management
+- `create-project` - Create new projects from Git repositories, archives, or empty directories
+- `rename-project` - Rename existing projects
+- `list-projects` - Get a list of all projects
+- `get-project-details` - Get detailed information about a specific project
+
+#### File Operations
+- `get-file` - Read file contents with support for text and base64 encoding
+- `create-file` - Create new files with overwrite protection
+- `delete-file` - Delete files or directories with recursive options
+- `patch-file` - Apply modifications using various patch operations (diff, replace, lines, insert, code_block)
+
+#### System Operations
+- `run-bash` - Execute bash commands in project directories with timeout and environment controls
+- `list-filetree` - Browse project file structures with configurable depth and entry limits
+
+## How we build it 
+
+- Express server with dual protocol support:
+  - **REST API** for traditional HTTP-based project and file management
+  - **MCP (Model Context Protocol)** for seamless LLM integration
 - OpenAPI contract (`openapi.json`)
+- Multiple transport options for MCP (HTTP and Server-Sent Events)
+- 
+## Getting Started 
 
-## Requirements
+For detailed local setup instructions, see **[Running Locally](./docs/deploy/running-locally.md)**.
 
+**Quick start:**
 - Node.js >= 20
 - [pnpm](https://pnpm.io/) (recommended)
-- Docker (optional)
+- Clone, install dependencies, configure `.env`, and run `pnpm dev`
 
-## Setup
+## Deployment
 
-1. **Clone the repository:**
-   ```sh
-   git clone https://github.com/MauricioMilano/coder-api.git
-   cd coder-api
-   ```
+For detailed setup and deployment instructions, see our deployment guides:
 
-2. **Install dependencies:**
-   ```sh
-   pnpm install
-   ```
+- **[Running Locally](./docs/deploy/running-locally.md)** - Local development setup and testing
+- **[Self-Hosted Server](./docs/deploy/self-hosted.md)** - Deploy on your own VPS or server
+- **[Cloud Platforms](./docs/deploy/cloud-platforms.md)** - Deploy on Render, Heroku, Easypanel, and other cloud services  
+- **[Local Tunneling](./docs/deploy/local-tunneling.md)** - Use ngrok or other tunneling services for development
 
-3. **Configure environment variables:**
-   Create a `.env` file (example) and update `WORKSPACE_ROOT` with the folder that will be your projects. This folder must start empty:
-   ```
-   PORT=3000
-   WORKSPACE_ROOT=/srv/workspace
-   ALLOW_NETWORK=false
-   MAX_FILE_SIZE=5000000
-   MAX_STDOUT_BYTES=2000000
-   BASH_TIMEOUT_SEC=120
-   MAX_UPLOAD_MB=20
-   ```
-
-4. **Run in development:**
-   ```sh
-   pnpm dev
-   ```
-
-5. **Build and run in production:**
-   ```sh
-   pnpm build
-   pnpm start
-   ```
-
-
-## Exposing the API to ChatGPT
-
-To allow ChatGPT (or any external service) to access your local backend, you must expose your server to the public internet using a tunneling service. This is required because ChatGPT cannot access localhost or private IPs directly.
-
-
-### Exposing with Ngrok
-
-This project includes a script to expose your local server using [ngrok](https://ngrok.com/).
-
-**You might need to configure the npx package for ngrok.**
-
-And to configure, you must create a ngrok account and get your token. It's free! 
-
-After you create your account, go to https://dashboard.ngrok.com to get your token. 
-![image](./docs/ngrok.png)
-
-Then apply it to internal ngrok.
-
-```
-npx ngrok config add-authtoken $YOUR_AUTHTOKEN
-```
-
-
-
-**To start the server and get a public URL:**
-
-```sh
-pnpm tunnel
-```
-
-You will see output like:
-
-```
-{"level":30,"time":1757608557875,"pid":7446,"hostname":"Mauricio-Pc","msg":"Server listening at http://0.0.0.0:3007"}
-Server listening locally on port 3007
-ChatGPT URL: https://my123url.ngrok-free.app/openapi
-```
-
-Use the ngrok URL in ChatGPT or any external client.
+To allow external services (like ChatGPT or other AI assistants) to access your Coder-API, you need to make it accessible over the internet using one of the deployment methods above.
 
 ---
 
-## GPT Usage
-First, go to https://chatgpt.com/gpts and create your GPT.
-![mygpts](./docs/mygpts.png)
+## API Documentation
 
-Then fill your gpt with details and create an action. 
-![actions](./docs/new_gpt.png)
+Coder-API provides two main interfaces:
 
-Then, choose the option to import url.and there you should paste your url there `your_app.ngrok-free.app/openapi`. Don't forget the /openapi. 
+### REST API
+Traditional HTTP-based API for project and file management.
+- **[REST API Documentation](./docs/api/rest-api.md)** - Complete REST API guide with examples
+- **OpenAPI Contract**: `/openapi` endpoint or `openapi.json` file
 
-![importing url](./docs/import_url.png)
+### Model Context Protocol (MCP) 
+Standardized protocol for AI assistant integration.
+- **[MCP Overview](./docs/api/mcp.md)** - MCP protocol documentation and examples
 
-after you import the url, you should see the new tasks that your chatgpt can use: 
-
-![after import](./docs/coder_imported.png)
-
-
-Then save it and enjoy your autonomous agent.
-
-## API Usage
-
-See `openapi.json` for the full contract.
-
-### Example requests
-
-- **Add a project:**
-  ```sh
-  curl -X POST http://localhost:3000/projects \
-    -H 'Content-Type: application/json' \
-    -d '{"source":{"local":{"mount":"workbench","path":"/my-project"}},"name":"my-project"}'
-  ```
-
-- **Read filetree:**
-  ```sh
-  curl 'http://localhost:3000/projects/prj_xxx/filetree?path=/&depth=2'
-  ```
-
-- **Read a file:**
-  ```sh
-  curl 'http://localhost:3000/projects/prj_xxx/files?path=/README.md'
-  ```
-
-- **Create a file:**
-  ```sh
-  curl -X POST http://localhost:3000/projects/prj_xxx/files \
-    -H 'Content-Type: application/json' \
-    -d '{"path":"/src/index.ts","content":"export {}","encoding":"text","create_parents":true,"overwrite":false}'
-  ```
-
-- **Run bash command:**
-  ```sh
-  curl -X POST http://localhost:3000/projects/prj_xxx/bash \
-    -H 'Content-Type: application/json' \
-    -d '{"command":"ls -la","workdir":"/","timeout_sec":10}'
-  ```
+## How To Use  
+- **[ChatGPT MCP Integration](./docs/how-to-use/on_chatgpt_mcp.md)** - Using MCP with ChatGPT
+- **[ChatGPT REST Integration](./docs/how-to-use/on_chatgpt_rest.md)** - Using REST API with ChatGPT
+- **[VS Code Copilot Integration](./docs/how-to-use/on_copilot.md)** - Using with VS Code
 
 ## Security Notes
 
 - All file operations are confined to `WORKSPACE_ROOT/{projectId}`.
 - Bash commands are not fully network-isolated (MVP). Use in a controlled environment.
+- See deployment documentation for security considerations specific to each deployment method.
 
 ## Contributing
 
 1. Fork and clone the repo.
 2. Create a feature branch.
-3. Add tests for new features (see `tests/` if available).
-4. Run `pnpm lint` before submitting a PR.
-5. Open a pull request with a clear description.
+
+3. Open a pull request with a clear description.

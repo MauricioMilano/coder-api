@@ -299,6 +299,7 @@
       "patch": {
         "summary": "Edit Project File",
         "operationId": "editProjectFile",
+        "description": "File editing endpoint with multiple operation types for different editing scenarios.",
         "parameters": [
           {
             "name": "projectId",
@@ -318,26 +319,165 @@
                 "properties": {
                   "path": {
                     "type": "string",
-                    "description": "Path of the file to be edited."
+                    "description": "Path of the file to be edited, relative to the project root."
                   },
-                  "content": {
+                  "expected_hash": {
                     "type": "string",
-                    "description": "Content containing the substitution blocks with delimiters '// ------- SEARCH', '// =======', '// +++++++ REPLACE'. You should use it always. The content between '// ------- SEARCH' and '// =======' is the text to be searched, and the content between '// =======' and '// +++++++ REPLACE' is the text to replace it with."
+                    "description": "Optional sha256 hash of the current file contents for validation."
+                  },
+                  "preview": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Preview changes without applying them. Returns diff preview and stats."
+                  },
+                  "operation": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "title": "Traditional Diff Patch",
+                        "properties": {
+                          "type": { "type": "string", "enum": ["diff"] },
+                          "patch": { "type": "string", "description": "Unified diff to apply" },
+                          "fuzz_factor": { "type": "integer", "default": 0, "minimum": 0, "maximum": 10 },
+                          "auto_convert_line_endings": { "type": "boolean", "default": true }
+                        },
+                        "required": ["type", "patch"]
+                      },
+                      {
+                        "type": "object",
+                        "title": "Find and Replace",
+                        "properties": {
+                          "type": { "type": "string", "enum": ["replace"] },
+                          "find": { "type": "string", "description": "Text to find" },
+                          "replace": { "type": "string", "description": "Text to replace with" },
+                          "all": { "type": "boolean", "default": false, "description": "Replace all occurrences" },
+                          "case_sensitive": { "type": "boolean", "default": true },
+                          "regex": { "type": "boolean", "default": false, "description": "Treat find as regex" }
+                        },
+                        "required": ["type", "find", "replace"]
+                      },
+                      {
+                        "type": "object",
+                        "title": "Line-based Operations",
+                        "properties": {
+                          "type": { "type": "string", "enum": ["lines"] },
+                          "action": { "type": "string", "enum": ["insert", "delete", "replace"] },
+                          "line_number": { "type": "integer", "minimum": 1, "description": "1-indexed line number" },
+                          "count": { "type": "integer", "minimum": 1, "default": 1, "description": "Number of lines to affect" },
+                          "content": { "type": "string", "description": "Content for insert/replace operations" }
+                        },
+                        "required": ["type", "action", "line_number"]
+                      },
+                      {
+                        "type": "object",
+                        "title": "Character Position Insert",
+                        "properties": {
+                          "type": { "type": "string", "enum": ["insert"] },
+                          "position": { "type": "integer", "minimum": 0, "description": "Character position in file" },
+                          "content": { "type": "string", "description": "Content to insert" }
+                        },
+                        "required": ["type", "position", "content"]
+                      },
+                      {
+                        "type": "object",
+                        "title": "Smart Code Block Replacement",
+                        "properties": {
+                          "type": { "type": "string", "enum": ["code_block"] },
+                          "language": { "type": "string", "description": "Programming language for context" },
+                          "find_context": { "type": "string", "description": "Context to identify the code block" },
+                          "replace_with": { "type": "string", "description": "New code block content" },
+                          "fuzzy_match": { "type": "boolean", "default": true, "description": "Allow fuzzy matching" }
+                        },
+                        "required": ["type", "find_context", "replace_with"]
+                      }
+                    ]
                   }
                 },
-                "required": ["path", "content"]
+                "required": ["path", "operation"]
               },
-              "example": {
-                "path": "src/example.txt",
-                "content": "// ------- SEARCH\nimport { Communication } from \"./pages/Communication\";\n// =======\nimport CommunicationPage from \"./pages/Communication\";\n// +++++++ REPLACE\n// ------- SEARCH\n<Route path=\"/communication\" element={<Communication />} />\n// =======\n<Route path=\"/communication\" element={<CommunicationPage />} />\n// +++++++ REPLACE\n"
+              "examples": {
+                "find_replace": {
+                  "summary": "Simple find and replace",
+                  "value": {
+                    "path": "src/example.ts",
+                    "operation": {
+                      "type": "replace",
+                      "find": "import { Communication }",
+                      "replace": "import CommunicationPage",
+                      "case_sensitive": true
+                    }
+                  }
+                },
+                "line_insert": {
+                  "summary": "Insert lines at specific position",
+                  "value": {
+                    "path": "src/config.ts",
+                    "operation": {
+                      "type": "lines",
+                      "action": "insert",
+                      "line_number": 5,
+                      "content": "// New configuration option\nexport const DEBUG_MODE = true;"
+                    }
+                  }
+                },
+                "code_block_replace": {
+                  "summary": "Smart code block replacement",
+                  "value": {
+                    "path": "src/api.ts",
+                    "operation": {
+                      "type": "code_block",
+                      "language": "typescript",
+                      "find_context": "function processData",
+                      "replace_with": "async function processData(data: any) {\n  return await enhancedProcessor(data);\n}",
+                      "fuzzy_match": true
+                    }
+                  }
+                },
+                "preview_mode": {
+                  "summary": "Preview changes before applying",
+                  "value": {
+                    "path": "src/example.ts",
+                    "preview": true,
+                    "operation": {
+                      "type": "replace",
+                      "find": "old function",
+                      "replace": "new function"
+                    }
+                  }
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "File edited successfully."
-          }
+            "description": "File edited successfully or preview generated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "path": { "type": "string" },
+                    "hash": { "type": "string" },
+                    "bytes_before": { "type": "integer" },
+                    "bytes_after": { "type": "integer" },
+                    "preview": { "type": "boolean", "description": "True if this was a preview request" },
+                    "original_hash": { "type": "string", "description": "Hash of original content (preview mode)" },
+                    "modified_hash": { "type": "string", "description": "Hash of modified content (preview mode)" },
+                    "diff_preview": { "type": "string", "description": "Preview of changes (preview mode)" },
+                    "stats": {
+                      "type": "object",
+                      "description": "Operation-specific statistics",
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Invalid operation or parameters." },
+          "409": { "description": "Hash mismatch or operation could not be applied." },
+          "422": { "description": "Validation error in request payload." }
         }
       },
       "delete": {

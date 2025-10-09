@@ -1,38 +1,18 @@
-import { FastifyInstance } from 'fastify';
-import { z } from 'zod';
-import path from 'path';
-import fs from 'fs/promises';
-import { safeResolvePath } from '../lib/fs-safe';
-import { spawnBash } from '../lib/sandbox';
-import { Project } from '../types/common';
+import { Router, Request, Response } from "express";
+import { runBashCommand } from "../core/bash";
 
-const BashSchema = z.object({
-  command: z.string().min(1),
-  workdir: z.string().default('/'),
-  timeout_sec: z.number().default(120),
-  env: z.record(z.string()).optional()
+const router = Router({ mergeParams: true });
+
+router.post("/", async (req: Request, res: Response) => {
+  const { projectId } = req.params;
+  try {
+    const result = await runBashCommand(projectId, req.body);
+    return res.json(result);
+  } catch (err: any) {
+    return res
+      .status(err.statusCode || 500)
+      .json({ error: err.message || "Execution error", details: err.details });
+  }
 });
 
-export default async function (fastify: FastifyInstance) {
-  fastify.post('/', async (req, reply) => {
-    const parse = BashSchema.safeParse(req.body);
-    if (!parse.success) {
-      return reply.status(422).send({ error: 'Validation error', details: parse.error.errors });
-    }
-  const { config } = require('../config');
-  const stateFile = path.join(config.workspaceRoot, '.state', `${(req.params as any).projectId}.json`);
-    let project: Project;
-    try {
-      project = JSON.parse(await fs.readFile(stateFile, 'utf-8'));
-    } catch {
-      return reply.status(404).send({ error: 'Project not found' });
-    }
-    const absWorkdir = await safeResolvePath(project.rootAbsPath, parse.data.workdir);
-    const result = await spawnBash(parse.data.command, {
-      cwd: absWorkdir,
-      timeoutSec: parse.data.timeout_sec,
-      env: parse.data.env,
-    });
-    return result;
-  });
-}
+module.exports = router;
