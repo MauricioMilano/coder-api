@@ -23,9 +23,11 @@ The Model Context Protocol (MCP) is designed specifically for AI-tool integratio
 
 ### 1. Start Your Coder-API Server 
 
+**Important**: ChatGPT needs internet access to your server. If you haven't configured a tunnel yet, see the **[Local Tunneling Guide](../../deploy/local-tunneling.md)** for setup instructions.
+
 The server will expose MCP endpoints:
-- **HTTP Transport**: `http://<URL>:<PORT>/mcp`
-- **SSE Transport**: `http://<URL:<PORT/mcp-sse`
+- **HTTP Transport**: `https://<your-tunnel-url>/mcp`
+- **SSE Transport**: `https://<your-tunnel-url>/mcp-sse`
 
 ### 2. Configure ChatGPT for MCP
 

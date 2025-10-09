@@ -44,275 +44,49 @@ The server provides the following capabilities:
 - 
 ## Getting Started 
 
+For detailed local setup instructions, see **[Running Locally](./docs/deploy/running-locally.md)**.
+
+**Quick start:**
 - Node.js >= 20
 - [pnpm](https://pnpm.io/) (recommended)
-- Docker (optional)
+- Clone, install dependencies, configure `.env`, and run `pnpm dev`
 
-## Setup Local
+## Deployment
 
-1. **Clone the repository:**
-   ```sh
-   git clone https://github.com/MauricioMilano/coder-api.git
-   cd coder-api
-   ```
+For detailed setup and deployment instructions, see our deployment guides:
 
-2. **Install dependencies:**
-   ```sh
-   pnpm install
-   ```
+- **[Running Locally](./docs/deploy/running-locally.md)** - Local development setup and testing
+- **[Self-Hosted Server](./docs/deploy/self-hosted.md)** - Deploy on your own VPS or server
+- **[Cloud Platforms](./docs/deploy/cloud-platforms.md)** - Deploy on Render, Heroku, Easypanel, and other cloud services  
+- **[Local Tunneling](./docs/deploy/local-tunneling.md)** - Use ngrok or other tunneling services for development
 
-3. **Configure environment variables:**
-   Create a `.env` file (example) and update `WORKSPACE_ROOT` with the folder that will be your projects. This folder must start empty:
-   ```
-   PORT=3000
-   WORKSPACE_ROOT=/srv/workspace
-   ALLOW_NETWORK=false
-   MAX_FILE_SIZE=5000000
-   MAX_STDOUT_BYTES=2000000
-   BASH_TIMEOUT_SEC=120
-   MAX_UPLOAD_MB=20
-   ```
-
-4. **Run in development:**
-   ```sh
-   pnpm dev
-   ```
-
-5. **Build and run in production:**
-   ```sh
-   pnpm build
-   pnpm start
-   ```
-
-
-## Deployment Options
-
-To allow external services (like ChatGPT or other AI assistants) to access your Coder-API, you need to make it accessible over the internet. Here are several deployment options:
-
-### Option 1: Self-Hosted Server
-
-Deploy Coder-API on your own server with a public IP address or domain:
-
-#### Using Docker
-
-1. **Build the Docker image:**
-   ```sh
-   docker build -t coder-api .
-   ```
-
-2. **Run with Docker:**
-   ```sh
-   docker run -d \
-     --name coder-api \
-     -p 3000:3000 \
-     -v /path/to/workspace:/srv/workspace \
-     -e WORKSPACE_ROOT=/srv/workspace \
-     coder-api
-   ```
-
-#### Direct Deployment
-
-1. **On a VPS/Cloud Server:**
-   ```sh
-   # Clone and setup
-   git clone https://github.com/MauricioMilano/coder-api.git
-   cd coder-api
-   pnpm install
-   pnpm build
-   
-   # Configure environment
-   cp .env.example .env
-   # Edit .env with your settings
-   
-   # Start with PM2 (recommended)
-   npm install -g pm2
-   pm2 start npm --name "coder-api" -- start
-   pm2 startup
-   pm2 save
-   ```
-
-2. **Configure reverse proxy (nginx example):**
-   ```nginx
-   server {
-       listen 80;
-       server_name your-domain.com;
-       
-       location / {
-           proxy_pass http://localhost:3000;
-           proxy_http_version 1.1;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection 'upgrade';
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto $scheme;
-           proxy_cache_bypass $http_upgrade;
-       }
-   }
-   ```
-
-3. **Access your API:**
-   - REST API: `https://your-domain.com/openapi`
-   - MCP HTTP: `https://your-domain.com/mcp`
-   - MCP SSE: `https://your-domain.com/mcp-sse`
-
-### Option 2: Cloud Platform Deployment
-
-#### Render/Heroku
-Deploy using your platform's standard Node.js deployment process.
-
-### Option 3: Local Tunneling with Ngrok
-
-For development and testing, you can quickly expose your local server using [ngrok](https://ngrok.com/):
-
-1. **Configure ngrok:**
-   ```sh
-   # Create a free ngrok account at https://dashboard.ngrok.com
-   # Get your authtoken and configure it
-   npx ngrok config add-authtoken $YOUR_AUTHTOKEN
-   ```
-
-2. **Start the server with tunnel:**
-   ```sh
-   pnpm tunnel
-   ```
-
-3. **You'll get output like:**
-   ```
-   {"level":30,"time":1757608557875,"pid":7446,"hostname":"Mauricio-Pc","msg":"Server listening at http://0.0.0.0:3007"}
-   Server listening locally on port 3007
-   ChatGPT URL: https://my123url.ngrok-free.app/openapi
-   ```
-
-4. **Use the ngrok URL for:**
-   - ChatGPT Actions: `https://your-url.ngrok-free.app/openapi`
-   - MCP clients: `https://your-url.ngrok-free.app/mcp`
-
-### Option 4: Other Tunneling Services
-
-- **Cloudflare Tunnel:** Free, no account limits
-  ```sh
-  npx cloudflared tunnel --url http://localhost:3000
-  ```
-
-- **LocalTunnel:** Simple, no signup required
-  ```sh
-  npx localtunnel --port 3000
-  ```
+To allow external services (like ChatGPT or other AI assistants) to access your Coder-API, you need to make it accessible over the internet using one of the deployment methods above.
 
 ---
 
-## Model Context Protocol (MCP) Support
+## API Documentation
 
-This project now supports the **Model Context Protocol (MCP)**, enabling seamless integration with AI assistants and LLMs. MCP provides a standardized way for AI models to interact with external tools and resources.
-
-### MCP Transport Options
-
-The server supports multiple transport methods for MCP communication:
-
-- **Streamable HTTP** (`/mcp`) 
-
-- **Server-Sent Events** (`/mcp-sse`)
-   
-### Using MCP with AI Assistants
-
-For detailed instructions on how to set up and use MCP with various AI assistants, see [VS Code Copilot Guide](./docs/how-to-use/on_copilot.md).
-
-#### Example MCP Tool Usage
-
-Once connected, AI assistants can:
-
-- **Create a new project**: "Create a project from the GitHub repo https://github.com/user/repo"
-- **Read files**: "Show me the contents of src/main.ts in project prj_123"
-- **Modify files**: "Add a new function to utils.js that formats dates"
-- **Run commands**: "Run npm install in the project directory"
-- **Browse structure**: "Show me the file tree of the project"
-
-### MCP vs REST API
-
-| Feature | MCP | REST API |
-|---------|-----|----------|
-| **Integration** | Native AI assistant support | Manual HTTP requests |
-| **Tool Discovery** | Automatic | Manual API exploration |
-| **Type Safety** | Built-in with Zod schemas | OpenAPI documentation |
-| **Real-time** | SSE transport available | Standard HTTP |
-| **Use Case** | AI-driven development | Traditional web clients |
-
-### Server Capabilities
-
-Check available protocols and tools:
-```sh
-curl http://localhost:3000/capabilities
-```
-
-This returns information about both REST and MCP endpoints, active connections, and available tools.
-
----
-
-## GPT Usage
-First, go to https://chatgpt.com/gpts and create your GPT.
-![mygpts](./docs/pictures/chatgpt/mygpts.png)
-
-Then fill your gpt with details and create an action. 
-![actions](./docs/pictures/chatgpt/new_gpt.png)
-
-Then, choose the option to import url.and there you should paste your url there `your_app.ngrok-free.app/openapi`. Don't forget the /openapi. 
-
-![importing url](./docs/pictures/chatgpt/import_url.png)
-
-after you import the url, you should see the new tasks that your chatgpt can use: 
-
-![after import](./docs/pictures/chatgpt/coder_imported.png)
-
-
-Then save it and enjoy your autonomous agent.
-
-## API Usage
+Coder-API provides two main interfaces:
 
 ### REST API
+Traditional HTTP-based API for project and file management.
+- **[REST API Documentation](./docs/api/rest-api.md)** - Complete REST API guide with examples
+- **OpenAPI Contract**: `/openapi` endpoint or `openapi.json` file
 
-See `openapi.json` for the full REST API contract.
+### Model Context Protocol (MCP) 
+Standardized protocol for AI assistant integration.
+- **[MCP Overview](./docs/api/mcp.md)** - MCP protocol documentation and examples
 
-### Example requests
-
-- **Add a project:**
-  ```sh
-  curl -X POST http://localhost:3000/projects \
-    -H 'Content-Type: application/json' \
-    -d '{"source":{"local":{"mount":"workbench","path":"/my-project"}},"name":"my-project"}'
-  ```
-
-- **Read filetree:**
-  ```sh
-  curl 'http://localhost:3000/projects/prj_xxx/filetree?path=/&depth=2'
-  ```
-
-- **Read a file:**
-  ```sh
-  curl 'http://localhost:3000/projects/prj_xxx/files?path=/README.md'
-  ```
-
-- **Create a file:**
-  ```sh
-  curl -X POST http://localhost:3000/projects/prj_xxx/files \
-    -H 'Content-Type: application/json' \
-    -d '{"path":"/src/index.ts","content":"export {}","encoding":"text","create_parents":true,"overwrite":false}'
-  ```
-
-- **Run bash command:**
-  ```sh
-  curl -X POST http://localhost:3000/projects/prj_xxx/bash \
-    -H 'Content-Type: application/json' \
-    -d '{"command":"ls -la","workdir":"/","timeout_sec":10}'
-  ```
+## How To Use  
+- **[ChatGPT MCP Integration](./docs/how-to-use/on_chatgpt_mcp.md)** - Using MCP with ChatGPT
+- **[ChatGPT REST Integration](./docs/how-to-use/on_chatgpt_rest.md)** - Using REST API with ChatGPT
+- **[VS Code Copilot Integration](./docs/how-to-use/on_copilot.md)** - Using with VS Code
 
 ## Security Notes
 
 - All file operations are confined to `WORKSPACE_ROOT/{projectId}`.
 - Bash commands are not fully network-isolated (MVP). Use in a controlled environment.
-- **Production deployments:** Use HTTPS, configure firewalls, and implement authentication if needed.
-- **Self-hosted servers:** Ensure proper access controls and monitoring.
-- **Tunneling services:** Be aware that your local environment becomes accessible over the internet.
+- See deployment documentation for security considerations specific to each deployment method.
 
 ## Contributing
 

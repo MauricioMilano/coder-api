@@ -35,14 +35,14 @@ ChatGPT URL: https://my123url.ngrok-free.app/openapi
 1. Go to [ChatGPT GPTs](https://chatgpt.com/gpts)
 2. Click **"Create a GPT"** or **"My GPTs"** → **"Create a GPT"**
 
-![My GPTs](../../docs/pictures/mygpts.png)
+![My GPTs](../../docs/pictures/chatgpt/mygpts.png)
 
 3. Fill in your GPT details:
    - **Name**: "Coder Assistant (REST API)"
    - **Description**: "An autonomous coding assistant using REST API to access local development environment"
    - **Instructions**: Add instructions for REST API usage
 
-![New GPT](../../docs/pictures/new_gpt.png)
+![New GPT](../../docs/pictures/chatgpt/new_gpt.png)
 
 ### 3. Configure REST API Actions
 
@@ -50,7 +50,7 @@ ChatGPT URL: https://my123url.ngrok-free.app/openapi
 2. Click **"Create new action"**
 3. Choose **"Import from URL"**
 
-![Import URL](../../docs/pictures/import_url.png)
+![Import URL](../../docs/pictures/chatgpt/import_url.png)
 
 4. Enter your Coder-API OpenAPI URL:
    ```
@@ -64,7 +64,7 @@ ChatGPT URL: https://my123url.ngrok-free.app/openapi
 
 After importing, you should see all available REST API actions:
 
-![After Import](../../docs/pictures/coder_imported.png)
+![After Import](../../docs/pictures/chatgpt/coder_imported.png)
 
 The imported REST actions include:
 - `create-project` - Create new projects from Git repos or local paths
@@ -201,9 +201,24 @@ WORKSPACE_ROOT=/srv/workspace
 
 ## Next Steps
 
-With REST API integration, your ChatGPT can:
-- Perform complex file operations with precise control
-- Handle large codebases with efficient patch operations
-- Execute development workflows with proper error handling
-- Integrate with existing HTTP-based tools and services
-- Provide detailed logging and debugging information
+## Quick Start Examples
+
+Once you've connected Coder-API via REST, try these commands to get started:
+
+### Basic Commands
+- **"List all my projects"** - See existing projects
+- **"Create a new React project called 'my-app'"** - Start a new project
+- **"Show me the file structure of my project"** - Explore project files
+- **"Read the package.json file"** - View file contents
+
+### Advanced Operations
+- **"Add error handling to the login function in auth.ts"** - Code modifications
+- **"Run the test suite and show me any failures"** - Execute commands
+- **"Create a new API endpoint for user registration"** - File creation
+- **"Refactor this component to use TypeScript"** - Code improvements
+
+### Development Workflow
+- **"Clone the repository from github.com/user/repo and set it up"**
+- **"Install the dependencies and start the development server"**
+- **"Find all TODO comments in the codebase"**
+- **"Generate a README.md file for this project"**
