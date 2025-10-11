@@ -253,7 +253,7 @@ mcpServer.registerTool(
         outputSchema: {
             stdout: z.string(),
             stderr: z.string(),
-            exit_code: z.number(),
+            exit_code: z.number().nullable(),
             duration_ms: z.number(),
             truncated: z.object({
                 stdout: z.boolean(),
