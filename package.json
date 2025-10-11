@@ -22,6 +22,7 @@
     "express-rate-limit": "^7.1.5",
     "ngrok": "^5.0.0-beta.2",
     "pino": "^8.17.0",
+    "pm2": "^5.4.3",
     "zod": "^3.22.4"
   },
   "devDependencies": {

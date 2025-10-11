@@ -7,7 +7,8 @@ Coder-API bridges the gap between AI models and code execution, providing a comp
 **Key Capabilities:**
 - 🔧 **Project Management**: Clone repositories, create projects, manage workspaces
 - 📁 **File Operations**: Read, write, patch, and organize code files with precision
-- ⚡ **Code Execution**: Run bash commands and scripts in isolated project environments  
+- ⚡ **Code Execution**: Run bash commands and scripts in isolated project environments
+- 🚀 **Process Management**: Start, stop, restart, and monitor applications using PM2
 - 🤖 **AI Design**: Built with MCP support with automatic tool discovery for LLMs
 - 🛡️ **Secure Sandbox**: All operations confined to designated workspace directories
 - 🌐 **Flexible Deployment**: Local development, cloud platforms, or tunneled access
@@ -33,6 +34,17 @@ The server provides the following capabilities:
 #### System Operations
 - `run-bash` - Execute bash commands in project directories with timeout and environment controls
 - `list-filetree` - Browse project file structures with configurable depth and entry limits
+- `search` - Search text across files in a project with regex and case sensitivity options
+
+#### Process Management (PM2)
+- `pm2-start` - Start applications with clustering, file watching, and advanced configuration
+- `pm2-stop` - Stop running applications by name or ID
+- `pm2-restart` - Restart applications with zero-downtime reloading
+- `pm2-delete` - Remove applications from PM2 process management
+- `pm2-list` - List all managed applications with status and performance metrics
+- `pm2-status` - Get detailed status information for specific applications
+- `pm2-logs` - Retrieve application logs with configurable line limits
+- `pm2-kill-all` - Stop all PM2 processes (daemon shutdown)
 
 ## How we build it 
 
@@ -49,6 +61,7 @@ For detailed local setup instructions, see **[Running Locally](./docs/deploy/run
 **Quick start:**
 - Node.js >= 20
 - [pnpm](https://pnpm.io/) (recommended)
+- PM2 installed globally: `npm install -g pm2` (for process management features)
 - Clone, install dependencies, configure `.env`, and run `pnpm dev`
 
 ## Deployment

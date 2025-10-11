@@ -959,6 +959,397 @@
         }
       }
     },
+    "/projects/{projectId}/pm2/start": {
+      "post": {
+        "summary": "Start PM2 Application",
+        "operationId": "startPM2Application",
+        "description": "Start an application using PM2 process manager with advanced configuration options",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Application name for PM2"
+                  },
+                  "script": {
+                    "type": "string",
+                    "description": "Path to the script to run (relative to project root)"
+                  },
+                  "cwd": {
+                    "type": "string",
+                    "description": "Working directory (relative to project root)"
+                  },
+                  "args": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Arguments to pass to the script"
+                  },
+                  "env": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Environment variables"
+                  },
+                  "instances": {
+                    "type": "integer",
+                    "description": "Number of instances to run (for clustering)"
+                  },
+                  "watch": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable file watching for auto-restart"
+                  },
+                  "ignore_watch": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Files/folders to ignore when watching"
+                  },
+                  "max_memory_restart": {
+                    "type": "string",
+                    "description": "Restart when memory usage exceeds limit (e.g., '1G')"
+                  },
+                  "log_file": {
+                    "type": "string",
+                    "description": "Combined logs file path"
+                  },
+                  "out_file": {
+                    "type": "string",
+                    "description": "Stdout logs file path"
+                  },
+                  "error_file": {
+                    "type": "string",
+                    "description": "Stderr logs file path"
+                  },
+                  "merge_logs": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Merge logs from all instances"
+                  },
+                  "time": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Prefix logs with timestamp"
+                  }
+                },
+                "required": ["name", "script"]
+              },
+              "examples": {
+                "start_node_app": {
+                  "summary": "Start a Node.js application",
+                  "value": {
+                    "name": "my-app",
+                    "script": "src/server.js",
+                    "instances": 2,
+                    "watch": true,
+                    "ignore_watch": ["node_modules", "logs"],
+                    "env": {
+                      "NODE_ENV": "production",
+                      "PORT": "3000"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "PM2 application started successfully."
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/pm2/stop": {
+      "post": {
+        "summary": "Stop PM2 Application",
+        "operationId": "stopPM2Application",
+        "description": "Stop a running PM2 application by name or ID",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nameOrId": {
+                    "type": "string",
+                    "description": "Application name or PM2 process ID"
+                  }
+                },
+                "required": ["nameOrId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "PM2 application stopped successfully."
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/pm2/restart": {
+      "post": {
+        "summary": "Restart PM2 Application",
+        "operationId": "restartPM2Application",
+        "description": "Restart a PM2 application by name or ID",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nameOrId": {
+                    "type": "string",
+                    "description": "Application name or PM2 process ID"
+                  }
+                },
+                "required": ["nameOrId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "PM2 application restarted successfully."
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/pm2": {
+      "delete": {
+        "summary": "Delete PM2 Application",
+        "operationId": "deletePM2Application",
+        "description": "Delete a PM2 application by name or ID (stops and removes from PM2)",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nameOrId": {
+                    "type": "string",
+                    "description": "Application name or PM2 process ID"
+                  }
+                },
+                "required": ["nameOrId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "PM2 application deleted successfully."
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/pm2/health": {
+      "get": {
+        "summary": "Check PM2 Health",
+        "operationId": "checkPM2Health",
+        "description": "Check if PM2 is properly installed and available for use",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PM2 health status retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "installed": {
+                      "type": "boolean",
+                      "description": "Whether PM2 is installed and available"
+                    },
+                    "error": {
+                      "type": "string",
+                      "description": "Error message if PM2 is not available"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/pm2/list": {
+      "get": {
+        "summary": "List PM2 Applications",
+        "operationId": "listPM2Applications",
+        "description": "List all PM2 applications with their status and information",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PM2 applications list retrieved successfully."
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/pm2/status": {
+      "get": {
+        "summary": "Get PM2 Application Status",
+        "operationId": "getPM2ApplicationStatus",
+        "description": "Get detailed status information for a specific PM2 application",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "nameOrId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Application name or PM2 process ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PM2 application status retrieved successfully."
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/pm2/logs": {
+      "get": {
+        "summary": "Get PM2 Application Logs",
+        "operationId": "getPM2ApplicationLogs",
+        "description": "Get recent logs from a PM2 application",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "nameOrId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Application name or PM2 process ID"
+          },
+          {
+            "name": "lines",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100
+            },
+            "description": "Number of recent log lines to retrieve"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PM2 application logs retrieved successfully."
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/pm2/kill-all": {
+      "post": {
+        "summary": "Stop All PM2 Applications",
+        "operationId": "stopAllPM2Applications",
+        "description": "Stop and kill all PM2 applications (PM2 daemon shutdown)",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All PM2 applications stopped successfully."
+          }
+        }
+      }
+    },
     "/projects/": {
       "get": {
         "summary": "Get Project",
