@@ -521,6 +521,402 @@
         }
       }
     },
+    "/projects/{projectId}/files/replace": {
+      "patch": {
+        "summary": "Replace Text in File",
+        "operationId": "replaceTextInFile",
+        "description": "Find and replace text in a file. Use for simple text substitutions, imports, variable names.",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "Path of the file to be edited, relative to the project root."
+                  },
+                  "find": {
+                    "type": "string",
+                    "description": "Text to find and replace"
+                  },
+                  "replace": {
+                    "type": "string",
+                    "description": "Replacement text"
+                  },
+                  "all": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Replace all occurrences, not just the first"
+                  },
+                  "case_sensitive": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether the search is case sensitive"
+                  },
+                  "regex": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to treat find pattern as regex"
+                  },
+                  "expected_hash": {
+                    "type": "string",
+                    "description": "Expected SHA256 hash for validation"
+                  },
+                  "preview": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Preview changes without applying them"
+                  }
+                },
+                "required": ["path", "find", "replace"]
+              },
+              "examples": {
+                "simple_replace": {
+                  "summary": "Simple text replacement",
+                  "value": {
+                    "path": "src/config.ts",
+                    "find": "const PORT = 3000",
+                    "replace": "const PORT = 8080"
+                  }
+                },
+                "import_replace": {
+                  "summary": "Replace import statement",
+                  "value": {
+                    "path": "src/app.ts",
+                    "find": "import express from 'express'",
+                    "replace": "import express, { Request, Response } from 'express'",
+                    "preview": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File patched successfully with replace operation."
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/files/lines": {
+      "patch": {
+        "summary": "Line-based Operations on File",
+        "operationId": "linesOperationOnFile",
+        "description": "Insert, delete, or replace specific lines in a file. Use for adding imports, deleting code blocks.",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "Path of the file to be edited, relative to the project root."
+                  },
+                  "action": {
+                    "type": "string",
+                    "enum": ["insert", "delete", "replace"],
+                    "description": "Action to perform on lines"
+                  },
+                  "line_number": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Line number to operate on (1-based)"
+                  },
+                  "count": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Number of lines to delete/replace (for delete/replace actions)"
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "Content to insert/replace (for insert/replace actions)"
+                  },
+                  "expected_hash": {
+                    "type": "string",
+                    "description": "Expected SHA256 hash for validation"
+                  },
+                  "preview": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Preview changes without applying them"
+                  }
+                },
+                "required": ["path", "action", "line_number"]
+              },
+              "examples": {
+                "insert_line": {
+                  "summary": "Insert a new line",
+                  "value": {
+                    "path": "src/app.ts",
+                    "action": "insert",
+                    "line_number": 3,
+                    "content": "import { config } from './config';"
+                  }
+                },
+                "delete_lines": {
+                  "summary": "Delete multiple lines",
+                  "value": {
+                    "path": "src/utils.ts",
+                    "action": "delete",
+                    "line_number": 10,
+                    "count": 3,
+                    "preview": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File patched successfully with lines operation."
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/files/code-block": {
+      "patch": {
+        "summary": "Smart Code Block Replacement",
+        "operationId": "codeBlockReplacement",
+        "description": "Smart replacement of code blocks, functions, or classes. Use for replacing entire functions or code structures.",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "Path of the file to be edited, relative to the project root."
+                  },
+                  "find_context": {
+                    "type": "string",
+                    "description": "Context to identify the code block (e.g., function name, class name)"
+                  },
+                  "replace_with": {
+                    "type": "string",
+                    "description": "New code block content"
+                  },
+                  "fuzzy_match": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Allow fuzzy matching for context"
+                  },
+                  "language": {
+                    "type": "string",
+                    "description": "Programming language for better context understanding"
+                  },
+                  "expected_hash": {
+                    "type": "string",
+                    "description": "Expected SHA256 hash for validation"
+                  },
+                  "preview": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Preview changes without applying them"
+                  }
+                },
+                "required": ["path", "find_context", "replace_with"]
+              },
+              "examples": {
+                "replace_function": {
+                  "summary": "Replace a function",
+                  "value": {
+                    "path": "src/utils.ts",
+                    "find_context": "function calculateSum",
+                    "replace_with": "function calculateSum(numbers: number[]): number {\n  return numbers.reduce((sum, num) => sum + num, 0);\n}",
+                    "language": "typescript",
+                    "preview": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File patched successfully with code block operation."
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/files/insert": {
+      "patch": {
+        "summary": "Insert at Character Position",
+        "operationId": "insertAtPosition",
+        "description": "Insert content at a specific character position. Use for file headers, footers, or precise insertions.",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "Path of the file to be edited, relative to the project root."
+                  },
+                  "position": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Character position to insert at (0-based)"
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "Content to insert"
+                  },
+                  "expected_hash": {
+                    "type": "string",
+                    "description": "Expected SHA256 hash for validation"
+                  },
+                  "preview": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Preview changes without applying them"
+                  }
+                },
+                "required": ["path", "position", "content"]
+              },
+              "examples": {
+                "add_header": {
+                  "summary": "Add file header",
+                  "value": {
+                    "path": "src/script.js",
+                    "position": 0,
+                    "content": "#!/usr/bin/env node\n// Auto-generated script\n\n"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File patched successfully with insert operation."
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/files/diff": {
+      "patch": {
+        "summary": "Apply Unified Diff",
+        "operationId": "applyUnifiedDiff",
+        "description": "Apply a traditional unified diff patch. Use for complex changes when you have a proper diff format.",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "Path of the file to be edited, relative to the project root."
+                  },
+                  "patch": {
+                    "type": "string",
+                    "description": "Unified diff patch content"
+                  },
+                  "fuzz_factor": {
+                    "type": "integer",
+                    "default": 0,
+                    "minimum": 0,
+                    "maximum": 10,
+                    "description": "Fuzz factor for patch matching (0-10)"
+                  },
+                  "auto_convert_line_endings": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Automatically convert line endings"
+                  },
+                  "expected_hash": {
+                    "type": "string",
+                    "description": "Expected SHA256 hash for validation"
+                  },
+                  "preview": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Preview changes without applying them"
+                  }
+                },
+                "required": ["path", "patch"]
+              },
+              "examples": {
+                "apply_diff": {
+                  "summary": "Apply a unified diff",
+                  "value": {
+                    "path": "src/example.ts",
+                    "patch": "--- a/src/example.ts\n+++ b/src/example.ts\n@@ -1,3 +1,3 @@\n-const old = 'value';\n+const new = 'value';",
+                    "preview": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File patched successfully with diff operation."
+          }
+        }
+      }
+    },
     "/projects/{projectId}/bash": {
       "post": {
         "summary": "Run Bash in Project",
