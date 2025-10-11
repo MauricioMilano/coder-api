@@ -52,6 +52,7 @@ server.use((req: Request, res: Response, next: NextFunction) => {
 server.use('/projects', require('./routes/projects'));
 server.use('/projects/:projectId/filetree', require('./routes/filetree'));
 server.use('/projects/:projectId/files', require('./routes/files'));
+server.use('/projects/:projectId/search', require('./routes/search'));
 server.use('/projects/:projectId/bash', require('./routes/bash'));
 
 // MCP Server integration - Add MCP endpoints to the main server
@@ -183,6 +184,7 @@ server.get('/capabilities', (req: Request, res: Response) => {
           '/projects',
           '/projects/:projectId/filetree',
           '/projects/:projectId/files',
+          '/projects/:projectId/search',
           '/projects/:projectId/bash'
         ]
       },
