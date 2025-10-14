@@ -389,6 +389,7 @@ if (config.sshEnabled) {
       title: 'Generate SSH key',
       description: 'Generate a new SSH key in the project .ssh directory',
       inputSchema: {
+        projectId: z.string(),
         type: z.enum(['ed25519','rsa']).default('ed25519'),
         bits: z.number().default(4096),
         comment: z.string().default('coder-api'),

@@ -31,17 +31,27 @@ export async function generateSshKey(project: Project, body: any) {
   const sshDir = getSshDir(project.rootAbsPath);
   await fs.mkdir(sshDir, { recursive: true });
   const keyPath = path.join(sshDir, 'id_' + (type === 'ed25519' ? 'ed25519' : 'rsa'));
+  // Check existence properly (do not swallow our own errors)
+  let exists = false;
   try {
-    if (!overwrite) {
-      await fs.access(keyPath);
-      // if we can access, key exists
-      throw { statusCode: 409, message: 'SSH key already exists', path: keyPath };
-    }
-  } catch { /* ignore when file not exists */ }
+    await fs.access(keyPath);
+    exists = true;
+  } catch (e: any) {
+    if (e && e.code !== 'ENOENT') throw e;
+  }
+
+  if (exists && !overwrite) {
+    throw { statusCode: 409, message: 'SSH key already exists', path: keyPath };
+  }
+
+  if (exists && overwrite) {
+    await fs.rm(keyPath, { force: true });
+    await fs.rm(keyPath + '.pub', { force: true });
+  }
 
   const args = type === 'ed25519'
-    ? `ssh-keygen -t ed25519 -C "${comment}" -f "${keyPath}" -N ""`
-    : `ssh-keygen -t rsa -b ${bits} -C "${comment}" -f "${keyPath}" -N ""`;
+    ? `ssh-keygen -q -t ed25519 -C "${comment}" -f "${keyPath}" -N ""`
+    : `ssh-keygen -q -t rsa -b ${bits} -C "${comment}" -f "${keyPath}" -N ""`;
 
   const result = await spawnBash(args, { cwd: project.rootAbsPath, timeoutSec: 60 });
   const pubKey = await fs.readFile(keyPath + '.pub', 'utf-8');
