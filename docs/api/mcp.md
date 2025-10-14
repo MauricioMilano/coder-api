@@ -77,7 +77,38 @@ Coder-API exposes MCP through multiple transport methods:
 ```
 
 ### List Projects
+```
+### SSH Tools (if enabled)
+
+#### Generate key
 ```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "ssh-keygen",
+    "arguments": {
+      "projectId": "prj_xxx",
+      "type": "ed25519",
+      "comment": "coder-api"
+    }
+  }
+}
+```
+
+#### Read public key
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "ssh-public-key",
+    "arguments": {
+      "projectId": "prj_xxx",
+      "type": "ed25519"
+    }
+  }
+}
+```
+json
 {
   "method": "tools/call",
   "params": {

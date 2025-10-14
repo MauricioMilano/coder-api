@@ -41,6 +41,11 @@ const limiter = rateLimit({
   max: 100, // limit each IP to 100 requests per windowMs
 });
 server.use(limiter);
+server.use('/projects/:projectId/bash', require('./routes/bash'));
+if (config.sshEnabled) {
+  server.use('/projects/:projectId/ssh', require('./routes/ssh'));
+}
+
 
 // Request ID middleware
 server.use((req: Request, res: Response, next: NextFunction) => {
@@ -204,7 +209,7 @@ server.get('/capabilities', (req: Request, res: Response) => {
           'list-projects',
           'get-project-details',
           'list-filetree'
-        ]
+        ].concat(config.sshEnabled ? ['ssh-keygen','ssh-public-key'] : [])
       }
     },
     activeConnections: {

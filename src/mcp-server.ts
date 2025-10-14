@@ -16,6 +16,7 @@ import {
   patchFile 
 } from './core/files';
 import { runBashCommand } from './core/bash';
+import { generateSshKey, getPublicSshKey } from './core/ssh';
 import { listFiletree, FiletreeOptions } from './core/filetree';
 
 // Create the MCP server
@@ -380,3 +381,62 @@ mcpServer.registerTool(
 
 // Export the server for use in other modules
 export { mcpServer };
+// 5. SSH Tools (conditional)
+if (config.sshEnabled) {
+  mcpServer.registerTool(
+    'ssh-keygen',
+    {
+      title: 'Generate SSH key',
+      description: 'Generate a new SSH key in the project .ssh directory',
+      inputSchema: {
+        type: z.enum(['ed25519','rsa']).default('ed25519'),
+        bits: z.number().default(4096),
+        comment: z.string().default('coder-api'),
+        overwrite: z.boolean().default(false)
+      },
+      outputSchema: {
+        generated: z.boolean(),
+        private_key_path: z.string(),
+        public_key_path: z.string(),
+        public_key: z.string(),
+        stdout: z.string(),
+        stderr: z.string()
+      }
+    },
+    async ({ projectId, type, bits, comment, overwrite }) => {
+      try {
+        const project = await getProject(projectId);
+        const result = await generateSshKey(project, { type, bits, comment, overwrite });
+        return { content: [{ type: 'text', text: JSON.stringify(result) }], structuredContent: result };
+      } catch (error: any) {
+        return { content: [{ type: 'text', text: `Error: ${error.message || JSON.stringify(error)}` }], isError: true };
+      }
+    }
+  );
+
+  mcpServer.registerTool(
+    'ssh-public-key',
+    {
+      title: 'Read public SSH key',
+      description: 'Read the public SSH key from the project .ssh directory',
+      inputSchema: {
+        projectId: z.string(),
+        type: z.enum(['ed25519','rsa']).default('ed25519')
+      },
+      outputSchema: {
+        type: z.string(),
+        public_key_path: z.string(),
+        public_key: z.string()
+      }
+    },
+    async ({ projectId, type }) => {
+      try {
+        const project = await getProject(projectId);
+        const result = await getPublicSshKey(project, { type });
+        return { content: [{ type: 'text', text: JSON.stringify(result) }], structuredContent: result };
+      } catch (error: any) {
+        return { content: [{ type: 'text', text: `Error: ${error.message || JSON.stringify(error)}` }], isError: true };
+      }
+    }
+  );
+}

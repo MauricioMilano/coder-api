@@ -44,6 +44,20 @@ curl http://localhost:3000/projects/prj_xxx
 
 #### Rename project
 ```sh
+
+### SSH (if enabled)
+
+#### Generate key
+```sh
+curl -X POST http://localhost:3000/projects/prj_xxx/ssh/keygen \
+  -H 'Content-Type: application/json' \
+  -d '{"type":"ed25519","comment":"coder-api"}'
+```
+
+#### Read public key
+```sh
+curl 'http://localhost:3000/projects/prj_xxx/ssh/public-key?type=ed25519'
+```
 curl -X PATCH http://localhost:3000/projects/prj_xxx \
   -H 'Content-Type: application/json' \
   -d '{"name":"new-project-name"}'

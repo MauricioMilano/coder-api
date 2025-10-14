@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const envSchema = z.object({
+  SSH_ENABLED: z.enum(['true','false']).default('false'),
   PORT: z.string().default('3007'),
   WORKSPACE_ROOT: z.string().min(1),
   ALLOW_NETWORK: z.enum(['true', 'false']).default('false'),
@@ -13,6 +14,7 @@ const envSchema = z.object({
 const env = envSchema.parse(process.env);
 
 export const config = {
+  sshEnabled: env.SSH_ENABLED === 'true',
   port: parseInt(env.PORT, 10),
   workspaceRoot: env.WORKSPACE_ROOT,
   allowNetwork: env.ALLOW_NETWORK === 'true',
