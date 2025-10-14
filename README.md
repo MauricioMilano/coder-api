@@ -25,7 +25,11 @@ The server provides the following capabilities:
 - `get-project-details` - Get detailed information about a specific project
 
 #### File Operations
-- `get-file` - R
+- `get-file` - Read file contents with support for text and base64 encoding
+- `create-file` - Create new files with overwrite protection
+- `delete-file` - Delete files or directories with recursive options
+- `patch-file` - Apply modifications using various patch operations (diff, replace, lines, insert, code_block)
+
 ### SSH (Experimental)
 
 **Opt-in via env var**: set `SSH_ENABLED=true` to enable.
@@ -35,10 +39,6 @@ Capabilities:
 - Read the public key
 
 Docs: see [SSH API](./docs/api/ssh.md).
-ead file contents with support for text and base64 encoding
-- `create-file` - Create new files with overwrite protection
-- `delete-file` - Delete files or directories with recursive options
-- `patch-file` - Apply modifications using various patch operations (diff, replace, lines, insert, code_block)
 
 #### System Operations
 - `run-bash` - Execute bash commands in project directories with timeout and environment controls
