@@ -25,7 +25,21 @@ The server provides the following capabilities:
 - `get-project-details` - Get detailed information about a specific project
 
 #### File Operations
-- `get-file` - R
+- `get-file` — Read file contents with support for text and base64 encoding
+  - **What it does**: Returns the content of a file from a project workspace.
+  - **Notes**: Handles large files via streaming/limits; can return raw text or base64 payloads.
+
+- `create-file` — Create new files with overwrite protection
+  - **What it does**: Creates a new file; by default falha se o arquivo já existir.
+  - **Flags comuns**: `overwrite` para permitir substituição segura.
+
+- `delete-file` — Delete files or directories with recursive options
+  - **What it does**: Remove um arquivo único ou uma árvore de diretórios.
+  - **Flags comuns**: `recursive`, `force`.
+
+- `patch-file` — Apply modifications using various patch operations
+  - **What it does**: Permite alterações por “patch ops” (diff, replace, lines, insert, code_block etc.).
+  - **Exemplos**: trocar um bloco de código com contexto, inserir linhas em posições específicas, aplicar diffs.
 ### SSH (Experimental)
 
 **Opt-in via env var**: set `SSH_ENABLED=true` to enable.
