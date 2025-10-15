@@ -53,7 +53,7 @@ The server provides the following capabilities:
   - **MCP (Model Context Protocol)** for seamless LLM integration
 - OpenAPI contract (`openapi.json`)
 - Multiple transport options for MCP (HTTP and Server-Sent Events)
-- 
+
 ## Getting Started 
 
 For detailed local setup instructions, see **[Running Locally](./docs/deploy/running-locally.md)**.
