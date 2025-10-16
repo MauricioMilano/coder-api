@@ -29,56 +29,47 @@ export async function spawnBash(command: string, opts: {
       shellCommand = 'powershell.exe';
       shellArgs = ['-Command', command];
     } else {
-      // Enhanced shell detection for containers
-      const which = (cmd: string) => {
+      const fs = require('fs');
+      function isExecutable(file: string) {
         try {
-          return require('child_process').execSync(`command -v ${cmd}`, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+          fs.accessSync(file, fs.constants.X_OK);
+          return fs.statSync(file).isFile();
         } catch {
-          return null;
+          return false;
         }
-      };
-      
+      }
       console.log(`[spawnBash] Detecting available shell...`);
-      
-      // Try different shells in order of preference
-      const bashPath = which('bash');
-      if (bashPath) {
-        console.log(`[spawnBash] Found bash at: ${bashPath}`);
-        shellCommand = bashPath;
-        shellArgs = ['-lc', command];
+      // Always prefer /bin/bash if available
+      // Always quote the command for shells to avoid syntax errors with special characters
+      const quotedCommand = `'${command.replace(/'/g, `'"'"'`)}'`;
+      if (isExecutable('/bin/bash')) {
+        console.log(`[spawnBash] Using /bin/bash`);
+        shellCommand = '/bin/bash';
+        shellArgs = ['-lc', quotedCommand];
+      } else if (isExecutable('/usr/bin/bash')) {
+        console.log(`[spawnBash] Using /usr/bin/bash`);
+        shellCommand = '/usr/bin/bash';
+        shellArgs = ['-lc', quotedCommand];
+      } else if (isExecutable('/bin/sh')) {
+        console.log(`[spawnBash] Using /bin/sh`);
+        shellCommand = '/bin/sh';
+        shellArgs = ['-c', quotedCommand];
+      } else if (isExecutable('/usr/bin/sh')) {
+        console.log(`[spawnBash] Using /usr/bin/sh`);
+        shellCommand = '/usr/bin/sh';
+        shellArgs = ['-c', quotedCommand];
+      } else if (isExecutable('/bin/ash')) {
+        console.log(`[spawnBash] Using /bin/ash`);
+        shellCommand = '/bin/ash';
+        shellArgs = ['-c', quotedCommand];
+      } else if (isExecutable('/usr/bin/ash')) {
+        console.log(`[spawnBash] Using /usr/bin/ash`);
+        shellCommand = '/usr/bin/ash';
+        shellArgs = ['-c', quotedCommand];
       } else {
-        // Fallback to sh (should work in Alpine/BusyBox)
-        const shPath = which('sh');
-        if (shPath) {
-          console.log(`[spawnBash] Found sh at: ${shPath}`);
-          shellCommand = shPath;
-          shellArgs = ['-c', command];
-        } else {
-          // Last resort - try direct paths
-          console.log(`[spawnBash] Command 'which' failed, trying direct paths...`);
-          const fs = require('fs');
-          const possiblePaths = ['/bin/bash', '/usr/bin/bash', '/bin/sh', '/usr/bin/sh', '/bin/ash'];
-          
-          let found = false;
-          for (const path of possiblePaths) {
-            try {
-              fs.accessSync(path, fs.constants.F_OK | fs.constants.X_OK);
-              console.log(`[spawnBash] Found shell at: ${path}`);
-              shellCommand = path;
-              shellArgs = path.includes('bash') ? ['-lc', command] : ['-c', command];
-              found = true;
-              break;
-            } catch {
-              // Continue trying
-            }
-          }
-          
-          if (!found) {
-            console.log(`[spawnBash] No shell found, falling back to 'sh'`);
-            shellCommand = 'sh';
-            shellArgs = ['-c', command];
-          }
-        }
+        console.log(`[spawnBash] No shell found, falling back to 'sh'`);
+        shellCommand = 'sh';
+        shellArgs = ['-c', quotedCommand];
       }
     }
 
