@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Install essential packages for shell compatibility and development tools
 RUN apk update && apk add --no-cache \
-    bash \
+    # bash \
     busybox \
     openssh \
     git \
@@ -16,9 +16,9 @@ RUN apk update && apk add --no-cache \
 
 
 # Ensure /bin/bash and /usr/bin/bash exist and are executable
-RUN [ -x /bin/bash ] || (echo "bash not found or not executable!" && exit 1)
-RUN ln -sf /bin/bash /usr/bin/bash
-RUN ln -sf /bin/ash /usr/bin/ash
+# RUN [ -x /bin/bash ] || (echo "bash not found or not executable!" && exit 1)
+# RUN ln -sf /bin/bash /usr/bin/bash
+# RUN ln -sf /bin/ash /usr/bin/ash
 RUN ln -sf /bin/sh /usr/bin/sh
 
 # Ensure PATH is available for bash (login and non-login shells)

@@ -42,29 +42,13 @@ export async function spawnBash(command: string, opts: {
       // Always prefer /bin/bash if available
       // Always quote the command for shells to avoid syntax errors with special characters
       const quotedCommand = `'${command.replace(/'/g, `'"'"'`)}'`;
-      if (isExecutable('/bin/bash')) {
-        console.log(`[spawnBash] Using /bin/bash`);
-        shellCommand = '/bin/bash';
-        shellArgs = ['-lc', quotedCommand];
-      } else if (isExecutable('/usr/bin/bash')) {
-        console.log(`[spawnBash] Using /usr/bin/bash`);
-        shellCommand = '/usr/bin/bash';
-        shellArgs = ['-lc', quotedCommand];
-      } else if (isExecutable('/bin/sh')) {
+         if (isExecutable('/bin/sh')) {
         console.log(`[spawnBash] Using /bin/sh`);
         shellCommand = '/bin/sh';
         shellArgs = ['-c', quotedCommand];
       } else if (isExecutable('/usr/bin/sh')) {
         console.log(`[spawnBash] Using /usr/bin/sh`);
         shellCommand = '/usr/bin/sh';
-        shellArgs = ['-c', quotedCommand];
-      } else if (isExecutable('/bin/ash')) {
-        console.log(`[spawnBash] Using /bin/ash`);
-        shellCommand = '/bin/ash';
-        shellArgs = ['-c', quotedCommand];
-      } else if (isExecutable('/usr/bin/ash')) {
-        console.log(`[spawnBash] Using /usr/bin/ash`);
-        shellCommand = '/usr/bin/ash';
         shellArgs = ['-c', quotedCommand];
       } else {
         console.log(`[spawnBash] No shell found, falling back to 'sh'`);
