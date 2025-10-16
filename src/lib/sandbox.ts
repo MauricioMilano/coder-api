@@ -17,140 +17,159 @@ export async function spawnBash(command: string, opts: {
   return new Promise((resolve, reject) => {
     const start = Date.now();
 
-    console.log(`[spawnBash] Starting command execution`);
+    console.log(`[spawnBash] Starting command execution (execSync approach)`);
     console.log(`[spawnBash] Working directory: ${opts.cwd}`);
     console.log(`[spawnBash] Command: ${command}`);
+    console.log(`[spawnBash] Platform: ${process.platform}`);
     
-    // Find a working shell using execSync first, then use spawn with that shell
-    let shellCommand: string;
-    let shellArgs: string[];
-    
+    // Since spawn is having issues with symlinks in BusyBox, use execSync directly
+    // This is more reliable in container environments
     const { execSync } = require('child_process');
-    const fs = require('fs');
     
-    // Test shells in order of preference using execSync (which works better in containers)
-    // Based on container analysis, prioritize the actual busybox executable over symlinks
-    const possibleShells = [
-      { path: '/bin/busybox', args: ['sh', '-c'] }, // Direct busybox call - most reliable
-      { path: '/bin/bash', args: ['-lc'] },
-      { path: '/usr/bin/bash', args: ['-lc'] },
-      { path: '/bin/ash', args: ['-c'] }, // BusyBox ash
-      { path: '/bin/sh', args: ['-c'] },  // Symlink to busybox, try after direct call
-      { path: '/usr/bin/sh', args: ['-c'] }
-    ];
+    // Platform-specific shell configuration
+    let possibleShells: Array<{ path: string; args: string[] }>;
     
-    let foundShell = null;
+    if (process.platform === 'win32') {
+      // Windows shells in order of preference
+      possibleShells = [
+        { path: 'powershell.exe', args: ['-Command'] },
+        { path: 'pwsh.exe', args: ['-Command'] }, // PowerShell Core
+        { path: 'cmd.exe', args: ['/c'] },
+        { path: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', args: ['-Command'] },
+        { path: 'C:\\Program Files\\PowerShell\\7\\pwsh.exe', args: ['-Command'] }
+      ];
+    } else {
+      // Unix-like systems (Linux, macOS, etc.)
+      possibleShells = [
+        { path: '/bin/busybox', args: ['sh', '-c'] }, // Direct busybox call - most reliable
+        { path: '/bin/ash', args: ['-c'] }, // BusyBox ash
+        { path: '/bin/sh', args: ['-c'] },  // Symlink to busybox
+        { path: '/bin/bash', args: ['-lc'] },
+        { path: '/usr/bin/bash', args: ['-lc'] },
+        { path: '/usr/bin/sh', args: ['-c'] }
+      ];
+    }
+    
+    let workingShell = null;
     
     for (const shell of possibleShells) {
       try {
         console.log(`[spawnBash] Testing shell: ${shell.path}`);
         
-        // Test with execSync first - this works more reliably in containers
-        const testCommand = shell.args.join(' ') + ' "echo test"';
-        console.log(`[spawnBash] execSync test command: ${shell.path} ${testCommand}`);
-        execSync(`${shell.path} ${testCommand}`, { 
-          stdio: ['ignore', 'ignore', 'ignore'],
-          timeout: 2000
-        });
-        console.log(`[spawnBash] execSync test passed for: ${shell.path}`);
-        
-        // Now test with Node.js spawn to ensure it actually works
-        console.log(`[spawnBash] Testing spawn with: ${shell.path} ${JSON.stringify([...shell.args, 'echo spawn_test'])}`);
-        try {
-          const testProc = spawn(shell.path, [...shell.args, 'echo spawn_test'], {
-            stdio: ['ignore', 'pipe', 'pipe'],
-            cwd: opts.cwd,
-            env: { ...process.env, ...opts.env }
-          });
-          
-          // If we reach here, spawn didn't immediately fail
-          console.log(`[spawnBash] spawn test process created successfully for: ${shell.path}`);
-          testProc.kill(); // Clean up test process
-          
-          foundShell = shell;
-          console.log(`[spawnBash] Found working shell (both execSync and spawn): ${shell.path}`);
-          break;
-        } catch (spawnError: any) {
-          console.log(`[spawnBash] spawn test ERROR for ${shell.path}: ${spawnError.message}`);
-          continue;
+        let testCommand: string;
+        if (process.platform === 'win32') {
+          // Windows: Handle PowerShell and cmd properly
+          if (shell.path.toLowerCase().includes('powershell') || shell.path.toLowerCase().includes('pwsh')) {
+            testCommand = `${shell.path} ${shell.args.join(' ')} 'echo test'`;
+          } else {
+            testCommand = `${shell.path} ${shell.args.join(' ')} "echo test"`;
+          }
+        } else {
+          // Unix: Use double quotes
+          testCommand = `${shell.path} ${shell.args.join(' ')} "echo test"`;
         }
         
+        console.log(`[spawnBash] Test command: ${testCommand}`);
+        execSync(testCommand, { 
+          stdio: ['ignore', 'ignore', 'ignore'],
+          timeout: 2000,
+          cwd: opts.cwd
+        });
+        workingShell = shell;
+        console.log(`[spawnBash] Found working shell: ${shell.path}`);
+        break;
       } catch (error: any) {
-        console.log(`[spawnBash] Shell ${shell.path} failed execSync test: ${error.code || error.message}`);
+        console.log(`[spawnBash] Shell ${shell.path} failed: ${error.code || error.message}`);
         continue;
       }
     }
     
-    if (!foundShell) {
+    if (!workingShell) {
       const error = new Error(`No compatible shell found. Tried: ${possibleShells.map(s => s.path).join(', ')}`);
       console.error('[spawnBash] Shell detection failed:', error.message);
       reject(error);
       return;
     }
     
-    shellCommand = foundShell.path;
-    shellArgs = [...foundShell.args, command];
+    console.log(`[spawnBash] Using execSync with shell: ${workingShell.path}`);
     
-    console.log(`[spawnBash] Using shell: ${shellCommand} with args: ${JSON.stringify(shellArgs)}`);
-    
-    let proc;
+    // Use execSync instead of spawn since it works reliably
     try {
-      proc = spawn(shellCommand, shellArgs, {
+      let fullCommand: string;
+      
+      if (process.platform === 'win32') {
+        // Windows: Handle PowerShell and cmd properly
+        if (workingShell.path.toLowerCase().includes('powershell') || workingShell.path.toLowerCase().includes('pwsh')) {
+          // PowerShell: Use single quotes and escape properly
+          const escapedCommand = command.replace(/'/g, "''");
+          fullCommand = `${workingShell.path} ${workingShell.args.join(' ')} '${escapedCommand}'`;
+        } else {
+          // CMD: Use double quotes and escape
+          const escapedCommand = command.replace(/"/g, '""');
+          fullCommand = `${workingShell.path} ${workingShell.args.join(' ')} "${escapedCommand}"`;
+        }
+      } else {
+        // Unix: Use double quotes and escape
+        const escapedCommand = command.replace(/"/g, '\\"');
+        fullCommand = `${workingShell.path} ${workingShell.args.join(' ')} "${escapedCommand}"`;
+      }
+      
+      console.log(`[spawnBash] Executing: ${fullCommand}`);
+      
+      const timeoutMs = (opts.timeoutSec ?? config.bashTimeoutSec) * 1000;
+      const maxOut = opts.maxStdoutBytes ?? config.maxStdoutBytes;
+      const maxErr = opts.maxStderrBytes ?? config.maxStdoutBytes;
+      
+      const result = execSync(fullCommand, {
         cwd: opts.cwd,
         env: { ...process.env, ...opts.env },
-        shell: false, // We handle shell detection manually
-        stdio: ['ignore', 'pipe', 'pipe'],
-        detached: false,
+        encoding: 'buffer',
+        timeout: timeoutMs,
+        maxBuffer: Math.max(maxOut, maxErr),
+        killSignal: 'SIGKILL'
       });
-      console.log(`[spawnBash] Process spawned successfully`);
-    } catch (error: any) {
-      console.error(`[spawnBash] Failed to spawn process: ${error.message}`);
-      console.error(`[spawnBash] Shell: ${shellCommand}, Args: ${JSON.stringify(shellArgs)}`);
-      reject(error);
-      return;
-    }
-
-
-
-    let stdout = Buffer.alloc(0);
-    let stderr = Buffer.alloc(0);
-    let killed = false;
-    const maxOut = opts.maxStdoutBytes ?? config.maxStdoutBytes;
-    const maxErr = opts.maxStderrBytes ?? config.maxStdoutBytes;
-    
-    proc.on('error', (error) => {
-      console.error(`[spawnBash] Process error: ${error.message}`);
-      clearTimeout(timeout);
-      reject(error);
-    });
-    
-    proc.stdout.on('data', (chunk) => {
-      if (stdout.length < maxOut) stdout = Buffer.concat([stdout, chunk]);
-      if (stdout.length > maxOut) proc.kill('SIGKILL');
-    });
-    proc.stderr.on('data', (chunk) => {
-      if (stderr.length < maxErr) stderr = Buffer.concat([stderr, chunk]);
-      if (stderr.length > maxErr) proc.kill('SIGKILL');
-    });
-    const timeout = setTimeout(() => {
-      killed = true;
-      console.log(`[spawnBash] Command timed out after ${opts.timeoutSec ?? config.bashTimeoutSec}s, killing process`);
-      proc.kill('SIGKILL');
-    }, (opts.timeoutSec ?? config.bashTimeoutSec) * 1000);
-    proc.on('close', (code) => {
-      clearTimeout(timeout);
-      console.log(`[spawnBash] Process completed with exit code: ${killed ? 'KILLED' : code}, duration: ${Date.now() - start}ms`);
+      
+      const stdout = result.slice(0, maxOut).toString('utf-8');
+      const duration = Date.now() - start;
+      
+      console.log(`[spawnBash] Command completed successfully, duration: ${duration}ms`);
+      
       resolve({
-        exit_code: killed ? null : code,
-        stdout: stdout.slice(0, maxOut).toString('utf-8'),
-        stderr: stderr.slice(0, maxErr).toString('utf-8'),
-        duration_ms: Date.now() - start,
+        exit_code: 0,
+        stdout: stdout,
+        stderr: '',
+        duration_ms: duration,
         truncated: {
-          stdout: stdout.length > maxOut,
-          stderr: stderr.length > maxErr,
-        },
+          stdout: result.length > maxOut,
+          stderr: false
+        }
       });
-    });
+      
+    } catch (error: any) {
+      console.error(`[spawnBash] execSync failed: ${error.message}`);
+      
+      const duration = Date.now() - start;
+      const maxOut = opts.maxStdoutBytes ?? config.maxStdoutBytes;
+      const maxErr = opts.maxStderrBytes ?? config.maxStdoutBytes;
+      
+      // Handle execSync error with output
+      const stdout = error.stdout ? error.stdout.slice(0, maxOut).toString('utf-8') : '';
+      const stderr = error.stderr ? error.stderr.slice(0, maxErr).toString('utf-8') : error.message;
+      const exitCode = error.status !== undefined ? error.status : (error.signal === 'SIGKILL' ? null : 1);
+      
+      console.log(`[spawnBash] Command failed with exit code: ${exitCode}, duration: ${duration}ms`);
+      
+      resolve({
+        exit_code: exitCode,
+        stdout: stdout,
+        stderr: stderr,
+        duration_ms: duration,
+        truncated: {
+          stdout: error.stdout ? error.stdout.length > maxOut : false,
+          stderr: error.stderr ? error.stderr.length > maxErr : false
+        }
+      });
+    }
   });
 }
 // Observação: para MVP, não há isolamento real de rede. Documentar no README.
