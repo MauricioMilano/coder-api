@@ -17,13 +17,53 @@ export async function spawnBash(command: string, opts: {
   return new Promise((resolve, reject) => {
     const start = Date.now();
 
-    console.log(`[spawnBash] Starting command execution (execSync approach)`);
+    console.log(`[spawnBash] Starting command execution (spawnSync approach)`);
     console.log(`[spawnBash] Working directory: ${opts.cwd}`);
     console.log(`[spawnBash] Command: ${command}`);
     console.log(`[spawnBash] Platform: ${process.platform}`);
     
-    // Since spawn is having issues with symlinks in BusyBox, use execSync directly
-    // This is more reliable in container environments
+    // Try Node.js built-in shell detection first (most reliable)
+    console.log(`[spawnBash] Attempting Node.js built-in shell detection...`);
+    try {
+      const { spawnSync } = require('child_process');
+      const result = spawnSync('sh', ['-c', command], {
+        cwd: opts.cwd,
+        env: { ...process.env, ...opts.env },
+        encoding: 'buffer',
+        timeout: (opts.timeoutSec ?? config.bashTimeoutSec) * 1000,
+        shell: true, // Let Node.js handle shell detection
+        stdio: ['ignore', 'pipe', 'pipe']
+      });
+      
+      if (!result.error) {
+        const maxOut = opts.maxStdoutBytes ?? config.maxStdoutBytes;
+        const maxErr = opts.maxStderrBytes ?? config.maxStdoutBytes;
+        const stdout = result.stdout ? result.stdout.slice(0, maxOut).toString('utf-8') : '';
+        const stderr = result.stderr ? result.stderr.slice(0, maxErr).toString('utf-8') : '';
+        const duration = Date.now() - start;
+        
+        console.log(`[spawnBash] Built-in shell detection successful, exit code: ${result.status}, duration: ${duration}ms`);
+        
+        resolve({
+          exit_code: result.status,
+          stdout: stdout,
+          stderr: stderr,
+          duration_ms: duration,
+          truncated: {
+            stdout: result.stdout ? result.stdout.length > maxOut : false,
+            stderr: result.stderr ? result.stderr.length > maxErr : false
+          }
+        });
+        return;
+      } else {
+        console.log(`[spawnBash] Built-in shell detection failed: ${result.error.message}`);
+      }
+    } catch (builtinError: any) {
+      console.log(`[spawnBash] Built-in shell detection failed: ${builtinError.message}`);
+    }
+    
+    // Fallback to manual shell detection
+    console.log(`[spawnBash] Falling back to manual shell detection...`);
     const { execSync } = require('child_process');
     
     // Platform-specific shell configuration
@@ -132,7 +172,7 @@ export async function spawnBash(command: string, opts: {
       return;
     }
     
-    console.log(`[spawnBash] Using execSync with shell: ${workingShell.path}`);
+    console.log(`[spawnBash] Using spawnSync with shell: ${workingShell.path}`);
     
     // Use spawnSync instead of execSync since it handles executables more reliably
     try {
