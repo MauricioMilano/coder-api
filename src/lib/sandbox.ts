@@ -27,11 +27,15 @@ export async function spawnBash(command: string, opts: {
       // Try to find available shells in order of preference
       const possibleShells = [
         '/bin/bash',
-        '/usr/bin/bash', 
+        '/usr/bin/bash',
+        '/bin/busybox', // Add BusyBox directly
         '/bin/sh',
         '/usr/bin/sh',
+        '/bin/ash',     // Alpine's default shell
         'bash',
-        'sh'
+        'sh',
+        'busybox',
+        'ash'
       ];
       
       let foundShell = null;
@@ -39,20 +43,50 @@ export async function spawnBash(command: string, opts: {
       
       console.log(`[spawnBash] Attempting to find compatible shell...`);
       
-      // Try direct file system access first (more reliable)
+      // Function to test if a shell actually works by trying to execute a simple command
+      const testShell = (shellPath: string, args: string[]) => {
+        try {
+          console.log(`[spawnBash] Testing shell: ${shellPath} with args: ${JSON.stringify(args)}`);
+          const { execSync } = require('child_process');
+          execSync(`${shellPath} ${args.join(' ')} "echo test"`, { 
+            stdio: ['ignore', 'ignore', 'ignore'],
+            timeout: 1000
+          });
+          console.log(`[spawnBash] Shell test successful: ${shellPath}`);
+          return true;
+        } catch (error: any) {
+          console.log(`[spawnBash] Shell test failed for ${shellPath}: ${error.message}`);
+          return false;
+        }
+      };
+      
+      // Try direct file system access and test functionality
       for (const shellPath of possibleShells) {
         try {
-          console.log(`[spawnBash] Trying shell: ${shellPath}`);
+          console.log(`[spawnBash] Checking shell: ${shellPath}`);
+          
+          // Check if file exists and is executable
           fs.accessSync(shellPath, fs.constants.F_OK | fs.constants.X_OK);
+          console.log(`[spawnBash] Shell file exists and is executable: ${shellPath}`);
+          
+          // Determine shell type and arguments
+          let shellArgs;
           if (shellPath.includes('bash')) {
-            foundShell = { command: shellPath, args: ['-lc', command] };
+            shellArgs = ['-lc'];
+          } else if (shellPath.includes('busybox')) {
+            shellArgs = ['sh', '-c']; // BusyBox needs 'sh' subcommand
           } else {
-            foundShell = { command: shellPath, args: ['-c', command] };
+            shellArgs = ['-c'];
           }
-          console.log(`[spawnBash] Found shell at: ${shellPath}`);
-          break;
+          
+          // Test if the shell actually works
+          if (testShell(shellPath, shellArgs)) {
+            foundShell = { command: shellPath, args: [...shellArgs, command] };
+            console.log(`[spawnBash] Found working shell: ${shellPath}`);
+            break;
+          }
         } catch (error: any) {
-          console.log(`[spawnBash] Shell ${shellPath} not available: ${error.code}`);
+          console.log(`[spawnBash] Shell ${shellPath} not available: ${error.code || error.message}`);
           // Continue trying next shell
         }
       }
