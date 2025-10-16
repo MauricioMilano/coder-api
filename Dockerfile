@@ -14,11 +14,17 @@ RUN apk update && apk add --no-cache \
     tzdata \
     && rm -rf /var/cache/apk/*
 
+
 # Ensure /bin/bash and /usr/bin/bash exist and are executable
 RUN [ -x /bin/bash ] || (echo "bash not found or not executable!" && exit 1)
 RUN ln -sf /bin/bash /usr/bin/bash
 RUN ln -sf /bin/ash /usr/bin/ash
 RUN ln -sf /bin/sh /usr/bin/sh
+
+# Ensure PATH is available for bash (login and non-login shells)
+RUN echo 'export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"' > /etc/profile.d/node_path.sh
+RUN chmod +x /etc/profile.d/node_path.sh
+ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 # Verify shell installations
 RUN bash -c "echo 'bash works'" && \
