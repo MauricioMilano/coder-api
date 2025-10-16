@@ -6,7 +6,6 @@ RUN apk update && apk add --no-cache \
     openssh \
     git \
     bash \
-    ash \
     curl \
     wget \
     ca-certificates \
