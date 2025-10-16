@@ -50,11 +50,53 @@ export async function spawnBash(command: string, opts: {
       ];
     }
     
+    // First, let's diagnose what's actually available
+    console.log(`[spawnBash] === DIAGNOSTIC INFORMATION ===`);
+    try {
+      const fs = require('fs');
+      console.log(`[spawnBash] Checking /bin directory:`);
+      const binFiles = fs.readdirSync('/bin').filter((f: string) => f.includes('sh') || f === 'bash' || f === 'ash' || f === 'busybox');
+      console.log(`[spawnBash] /bin shell files: ${binFiles.join(', ')}`);
+      
+      console.log(`[spawnBash] Checking /usr/bin directory:`);
+      try {
+        const usrBinFiles = fs.readdirSync('/usr/bin').filter((f: string) => f.includes('sh') || f === 'bash' || f === 'ash');
+        console.log(`[spawnBash] /usr/bin shell files: ${usrBinFiles.join(', ')}`);
+      } catch (e: any) {
+        console.log(`[spawnBash] /usr/bin not accessible: ${e.message}`);
+      }
+      
+      // Check specific files
+      const checkFiles = ['/bin/sh', '/bin/bash', '/bin/ash', '/bin/busybox', '/usr/bin/bash'];
+      for (const file of checkFiles) {
+        try {
+          const stat = fs.statSync(file);
+          const isExecutable = !!(stat.mode & parseInt('111', 8));
+          console.log(`[spawnBash] ${file}: exists, executable=${isExecutable}, size=${stat.size}`);
+        } catch (e: any) {
+          console.log(`[spawnBash] ${file}: ${e.code}`);
+        }
+      }
+    } catch (e: any) {
+      console.log(`[spawnBash] Diagnostic failed: ${e.message}`);
+    }
+    console.log(`[spawnBash] === END DIAGNOSTIC ===`);
+    
     let workingShell = null;
     
     for (const shell of possibleShells) {
       try {
         console.log(`[spawnBash] Testing shell: ${shell.path}`);
+        
+        // First check if the file exists before trying execSync
+        try {
+          const fs = require('fs');
+          fs.accessSync(shell.path, fs.constants.F_OK | fs.constants.X_OK);
+          console.log(`[spawnBash] File exists and is executable: ${shell.path}`);
+        } catch (fsError: any) {
+          console.log(`[spawnBash] File access failed for ${shell.path}: ${fsError.code}`);
+          continue;
+        }
         
         let testCommand: string;
         if (process.platform === 'win32') {
