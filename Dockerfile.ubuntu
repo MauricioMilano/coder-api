@@ -1,0 +1,33 @@
+# Alternative Dockerfile using Ubuntu for better shell compatibility
+FROM node:20-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install essential packages including proper bash shell
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    bash \
+    ca-certificates \
+    openssh-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Install pnpm and dependencies
+RUN npm install -g pnpm && pnpm install
+
+# Copy source code
+COPY . .
+
+# Build the application
+RUN pnpm build
+
+# Expose port
+EXPOSE 3000
+
+# Start the application
+CMD ["node", "dist/server.js"]
