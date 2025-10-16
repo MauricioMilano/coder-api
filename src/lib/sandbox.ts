@@ -17,21 +17,36 @@ export async function spawnBash(command: string, opts: {
   return new Promise((resolve, reject) => {
     const start = Date.now();
 
-    let shellCommand: string;
-    let shellArgs: string[];
-
-    if (process.platform === 'win32') {
-      shellCommand = 'powershell.exe';
-      shellArgs = ['-Command', command];
-    } else {
-      // Try to find available shells in order of preference
+    console.log(`[spawnBash] Starting command execution`);
+    console.log(`[spawnBash] Working directory: ${opts.cwd}`);
+    console.log(`[spawnBash] Command: ${command}`);
+    
+    // Use Node.js built-in shell detection instead of manual detection
+    // This is more reliable across different container environments
+    let proc;
+    try {
+      console.log(`[spawnBash] Using Node.js built-in shell detection`);
+      proc = spawn('sh', ['-c', command], {
+        cwd: opts.cwd,
+        env: { ...process.env, ...opts.env },
+        shell: true, // Let Node.js handle shell detection
+        stdio: ['ignore', 'pipe', 'pipe'],
+        detached: false,
+      });
+      console.log(`[spawnBash] Process spawned successfully with shell=true`);
+    } catch (error: any) {
+      console.error(`[spawnBash] Failed to spawn process with shell=true: ${error.message}`);
+      
+      // Fallback: try manual shell detection
+      console.log(`[spawnBash] Attempting manual shell detection as fallback...`);
+      
       const possibleShells = [
         '/bin/bash',
         '/usr/bin/bash',
-        '/bin/busybox', // Add BusyBox directly
-        '/bin/sh',
+        '/bin/busybox',
+        '/bin/sh', 
         '/usr/bin/sh',
-        '/bin/ash',     // Alpine's default shell
+        '/bin/ash',
         'bash',
         'sh',
         'busybox',
@@ -41,117 +56,63 @@ export async function spawnBash(command: string, opts: {
       let foundShell = null;
       const fs = require('fs');
       
-      console.log(`[spawnBash] Attempting to find compatible shell...`);
-      
-      // Function to test if a shell actually works by trying to execute a simple command
-      const testShell = (shellPath: string, args: string[]) => {
+      for (const shellPath of possibleShells) {
         try {
-          console.log(`[spawnBash] Testing shell: ${shellPath} with args: ${JSON.stringify(args)}`);
-          const { execSync } = require('child_process');
-          execSync(`${shellPath} ${args.join(' ')} "echo test"`, { 
+          console.log(`[spawnBash] Testing shell: ${shellPath}`);
+          
+          // Check if file exists
+          fs.accessSync(shellPath, fs.constants.F_OK | fs.constants.X_OK);
+          
+          // Test with a simple spawn to see if it actually works
+          const testProc = spawn(shellPath, ['-c', 'echo test'], {
             stdio: ['ignore', 'ignore', 'ignore'],
             timeout: 1000
           });
-          console.log(`[spawnBash] Shell test successful: ${shellPath}`);
-          return true;
-        } catch (error: any) {
-          console.log(`[spawnBash] Shell test failed for ${shellPath}: ${error.message}`);
-          return false;
-        }
-      };
-      
-      // Try direct file system access and test functionality
-      for (const shellPath of possibleShells) {
-        try {
-          console.log(`[spawnBash] Checking shell: ${shellPath}`);
           
-          // Check if file exists and is executable
-          fs.accessSync(shellPath, fs.constants.F_OK | fs.constants.X_OK);
-          console.log(`[spawnBash] Shell file exists and is executable: ${shellPath}`);
+          // If we get here without throwing, the shell works
+          testProc.kill();
           
-          // Determine shell type and arguments
-          let shellArgs;
           if (shellPath.includes('bash')) {
-            shellArgs = ['-lc'];
+            foundShell = { command: shellPath, args: ['-lc', command] };
           } else if (shellPath.includes('busybox')) {
-            shellArgs = ['sh', '-c']; // BusyBox needs 'sh' subcommand
+            foundShell = { command: shellPath, args: ['sh', '-c', command] };
           } else {
-            shellArgs = ['-c'];
+            foundShell = { command: shellPath, args: ['-c', command] };
           }
           
-          // Test if the shell actually works
-          if (testShell(shellPath, shellArgs)) {
-            foundShell = { command: shellPath, args: [...shellArgs, command] };
-            console.log(`[spawnBash] Found working shell: ${shellPath}`);
-            break;
-          }
-        } catch (error: any) {
-          console.log(`[spawnBash] Shell ${shellPath} not available: ${error.code || error.message}`);
-          // Continue trying next shell
-        }
-      }
-      
-      // If direct access failed, try using 'which' command as fallback
-      if (!foundShell) {
-        console.log(`[spawnBash] Direct shell access failed, trying 'which' command...`);
-        const which = (cmd: string) => {
-          try {
-            const result = require('child_process').execSync(`command -v ${cmd}`, { 
-              stdio: ['ignore', 'pipe', 'ignore'],
-              encoding: 'utf8'
-            }).toString().trim();
-            console.log(`[spawnBash] 'which ${cmd}' returned: ${result}`);
-            return result || null;
-          } catch (error: any) {
-            console.log(`[spawnBash] 'which ${cmd}' failed: ${error.message}`);
-            return null;
-          }
-        };
-        
-        const bashPath = which('bash');
-        if (bashPath) {
-          foundShell = { command: bashPath, args: ['-lc', command] };
-          console.log(`[spawnBash] Found bash via which: ${bashPath}`);
-        } else {
-          const shPath = which('sh');
-          if (shPath) {
-            foundShell = { command: shPath, args: ['-c', command] };
-            console.log(`[spawnBash] Found sh via which: ${shPath}`);
-          }
+          console.log(`[spawnBash] Found working shell: ${shellPath}`);
+          break;
+        } catch (testError: any) {
+          console.log(`[spawnBash] Shell ${shellPath} failed: ${testError.code || testError.message}`);
+          continue;
         }
       }
       
       if (!foundShell) {
-        const error = new Error(`No compatible shell found. Tried: ${possibleShells.join(', ')}`);
-        console.error('[spawnBash] Shell detection failed:', error.message);
-        reject(error);
+        const finalError = new Error(`No compatible shell found. Original error: ${error.message}. Tried: ${possibleShells.join(', ')}`);
+        console.error('[spawnBash] All shell detection methods failed:', finalError.message);
+        reject(finalError);
         return;
       }
       
-      shellCommand = foundShell.command;
-      shellArgs = foundShell.args;
+      // Try with the found shell
+      try {
+        console.log(`[spawnBash] Attempting spawn with found shell: ${foundShell.command} ${foundShell.args.join(' ')}`);
+        proc = spawn(foundShell.command, foundShell.args, {
+          cwd: opts.cwd,
+          env: { ...process.env, ...opts.env },
+          shell: false,
+          stdio: ['ignore', 'pipe', 'pipe'],
+          detached: false,
+        });
+      } catch (finalError: any) {
+        console.error(`[spawnBash] Final spawn attempt failed: ${finalError.message}`);
+        reject(finalError);
+        return;
+      }
     }
 
-    console.log(`[spawnBash] Executing: ${shellCommand} ${shellArgs.join(' ')}`);
-    console.log(`[spawnBash] Working directory: ${opts.cwd}`);
-    console.log(`[spawnBash] Command: ${command}`);
 
-    let proc;
-    try {
-      proc = spawn(shellCommand, shellArgs, {
-        cwd: opts.cwd,
-        env: { ...process.env, ...opts.env },
-        shell: false, // We explicitly specify the shellCommand, so we don't need Node.js to spawn another shell
-        stdio: ['ignore', 'pipe', 'pipe'],
-        detached: false,
-      });
-    } catch (error: any) {
-      console.error(`[spawnBash] Failed to spawn process: ${error.message}`);
-      console.error(`[spawnBash] Shell command: ${shellCommand}`);
-      console.error(`[spawnBash] Shell args: ${JSON.stringify(shellArgs)}`);
-      reject(error);
-      return;
-    }
 
     let stdout = Buffer.alloc(0);
     let stderr = Buffer.alloc(0);
@@ -161,8 +122,6 @@ export async function spawnBash(command: string, opts: {
     
     proc.on('error', (error) => {
       console.error(`[spawnBash] Process error: ${error.message}`);
-      console.error(`[spawnBash] Shell command: ${shellCommand}`);
-      console.error(`[spawnBash] Shell args: ${JSON.stringify(shellArgs)}`);
       clearTimeout(timeout);
       reject(error);
     });
