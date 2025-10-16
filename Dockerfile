@@ -21,17 +21,18 @@ RUN apk update && apk add --no-cache \
 # RUN ln -sf /bin/ash /usr/bin/ash
 RUN ln -sf /bin/sh /usr/bin/sh
 
-# Ensure PATH is available for bash (login and non-login shells)
-RUN echo 'export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"' > /etc/profile.d/node_path.sh
-RUN chmod +x /etc/profile.d/node_path.sh
-ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+# # Ensure PATH is available for bash (login and non-login shells)
+# RUN echo 'export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"' > /etc/profile.d/node_path.sh
+# RUN chmod +x /etc/profile.d/node_path.sh
+# ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-# Verify shell installations
-RUN bash -c "echo 'bash works'" && \
-    ash -c "echo 'ash works'" && \
-    sh -c "echo 'sh works'" && \
+# # Verify shell installations
+# RUN bash -c "echo 'bash works'" && \
+#     ash -c "echo 'ash works'" && \
+#     sh -c "echo 'sh works'" && \
+#     /bin/busybox sh -c "echo 'busybox works'"
+RUN sh -c "echo 'sh works'" && \
     /bin/busybox sh -c "echo 'busybox works'"
-
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 
