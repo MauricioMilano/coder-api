@@ -37,7 +37,7 @@ RUN sh -c "echo 'sh works'" && \
 COPY package.json pnpm-lock.yaml ./
 
 # Install pnpm and dependencies
-RUN npm install -g pnpm && pnpm install
+RUN npm install -g pnpm pm2 && pnpm install
 
 # Copy source code
 COPY . .
