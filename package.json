@@ -5,8 +5,11 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn src/server.ts",
+    "dev:frontend": "cd frontend && pnpm dev",
     "tunnel": "ts-node start-with-tunnel.ts",
-    "build": "tsc",
+    "build": "pnpm build:backend && pnpm build:frontend",
+    "build:backend": "tsc",
+    "build:frontend": "cd frontend && pnpm install && pnpm build",
     "start": "node dist/server.js",
     "lint": "eslint . --ext .ts"
   },

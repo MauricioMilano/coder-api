@@ -236,6 +236,32 @@ server.get('/openapi*', async (request: Request, response: Response) => {
   response.setHeader('Content-Type', 'application/json').json(openapi);
 });
 
+// Serve frontend static files (must be after API routes)
+import { existsSync } from 'fs';
+const frontendDistPath = join(__dirname, '../frontend/dist');
+
+if (existsSync(frontendDistPath)) {
+  logger.info('Serving frontend from:', frontendDistPath);
+
+  // Serve static files
+  server.use(express.static(frontendDistPath));
+
+  // SPA fallback - serve index.html for all non-API routes
+  server.get('*', (req: Request, res: Response) => {
+    res.sendFile(join(frontendDistPath, 'index.html'));
+  });
+} else {
+  logger.warn('Frontend dist folder not found. Run "pnpm build:frontend" to build the frontend.');
+
+  // Fallback for when frontend is not built
+  server.get('*', (req: Request, res: Response) => {
+    res.status(404).json({
+      error: 'Frontend not built',
+      message: 'Run "pnpm build:frontend" to build the frontend, or access the API directly.'
+    });
+  });
+}
+
 // Error handler middleware (must be last)
 server.use(problemErrorHandler);
 

@@ -12,6 +12,7 @@ Coder-API bridges the gap between AI models and code execution, providing a comp
 - 🤖 **AI Design**: Built with MCP support with automatic tool discovery for LLMs
 - 🛡️ **Secure Sandbox**: All operations confined to designated workspace directories
 - 🌐 **Flexible Deployment**: Local development, cloud platforms, or tunneled access
+- 🎨 **Web UI**: Modern React-based AI Code Assistant with BYOK support (OpenAI, Gemini, Llama)
 
 ![architecture](./docs/pictures/core/architecture.png)
 
@@ -54,7 +55,7 @@ The server provides the following capabilities:
 - OpenAPI contract (`openapi.json`)
 - Multiple transport options for MCP (HTTP and Server-Sent Events)
 
-## Getting Started 
+## Getting Started
 
 For detailed local setup instructions, see **[Running Locally](./docs/deploy/running-locally.md)**.
 
@@ -62,7 +63,35 @@ For detailed local setup instructions, see **[Running Locally](./docs/deploy/run
 - Node.js >= 20
 - [pnpm](https://pnpm.io/) (recommended)
 - PM2 installed globally: `npm install -g pm2` (for process management features)
-- Clone, install dependencies, configure `.env`, and run `pnpm dev`
+- Clone, install dependencies, configure `.env`, and run the server
+
+### Development Mode
+
+Run the backend and frontend separately for development with hot reload:
+
+```bash
+# Terminal 1: Backend API
+pnpm install
+pnpm dev
+
+# Terminal 2: Frontend UI (in another terminal)
+pnpm dev:frontend
+```
+
+- Backend: http://localhost:3000 (API)
+- Frontend: http://localhost:5173 (Web UI)
+
+### Production Mode
+
+Build and run everything from a single server:
+
+```bash
+pnpm install
+pnpm build    # Builds both backend and frontend
+pnpm start    # Serves API + Web UI on http://localhost:3000
+```
+
+The production build serves the React frontend from the Express server. Access the web UI at http://localhost:3000.
 
 ## Deployment
 
@@ -90,7 +119,28 @@ Traditional HTTP-based API for project and file management.
 Standardized protocol for AI assistant integration.
 - **[MCP Overview](./docs/api/mcp.md)** - MCP protocol documentation and examples
 
-## How To Use  
+## How To Use
+
+### Web UI (Recommended for Quick Start)
+
+1. Start the server: `pnpm build && pnpm start`
+2. Open http://localhost:3000 in your browser
+3. Click "Settings" and configure your AI provider:
+   - Choose provider: OpenAI, Google Gemini, or Groq
+   - Enter your API key (stored locally in your browser)
+   - Adjust temperature and max tokens as needed
+4. Select a project from the sidebar
+5. Chat with the AI to build, modify, and manage your code!
+
+The Web UI features:
+- 🤖 **BYOK Support** - Bring your own API keys for OpenAI, Gemini, or Llama
+- 💬 **AI Chat** - Natural language interface with streaming responses
+- 📂 **Project Browser** - File tree navigation and project management
+- 🖼️ **Live Preview** - Iframe preview of your running applications
+- 🎨 **Modern UI** - Clean, dark theme inspired by modern dev tools
+
+### AI Assistant Integrations
+
 - **[ChatGPT MCP Integration](./docs/how-to-use/on_chatgpt_mcp.md)** - Using MCP with ChatGPT
 - **[ChatGPT REST Integration](./docs/how-to-use/on_chatgpt_rest.md)** - Using REST API with ChatGPT
 - **[VS Code Copilot Integration](./docs/how-to-use/on_copilot.md)** - Using with VS Code

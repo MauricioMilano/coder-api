@@ -8,7 +8,10 @@ import type {
   SearchParams,
 } from '@/types';
 
-const API_BASE_URL = '/api';
+// In development (Vite dev server on port 5173), use /api prefix (proxied by Vite)
+// In production (served from Express), use empty string (same origin)
+const isDevelopment = window.location.port === '5173';
+const API_BASE_URL = isDevelopment ? '/api' : '';
 
 class CoderAPIClient {
   private async request<T>(

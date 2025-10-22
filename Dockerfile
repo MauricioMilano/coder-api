@@ -39,10 +39,11 @@ COPY package.json pnpm-lock.yaml ./
 # Install pnpm and dependencies
 RUN npm install -g pnpm pm2 && pnpm install
 
-# Copy source code
+# Copy source code (including frontend)
 COPY . .
 
-# Build the application
+# Build the application (backend + frontend)
+# This runs: tsc (backend) && cd frontend && pnpm install && pnpm build
 RUN pnpm build
 
 EXPOSE 3000
