@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Code Assistant - UI Mockup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background: #0a0a0a;
+            color: #e5e5e5;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background: #18181b;
+            border-bottom: 1px solid #27272a;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .ai-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: #27272a;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #18181b;
+            border-right: 1px solid #27272a;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid #27272a;
+        }
+
+        .project-selector {
+            width: 100%;
+            padding: 8px 12px;
+            background: #27272a;
+            border: 1px solid #3f3f46;
+            border-radius: 6px;
+            color: #e5e5e5;
+            font-size: 13px;
+        }
+
+        .sidebar-section {
+            padding: 16px;
+            border-bottom: 1px solid #27272a;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #a1a1aa;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .file-tree {
+            font-size: 13px;
+        }
+
+        .file-item {
+            padding: 6px 8px;
+            margin: 2px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-item:hover {
+            background: #27272a;
+        }
+
+        .file-icon {
+            font-size: 14px;
+        }
+
+        .ai-settings {
+            margin-top: auto;
+            padding: 16px;
+            border-top: 1px solid #27272a;
+        }
+
+        .ai-provider-select {
+            width: 100%;
+            padding: 8px 12px;
+            background: #27272a;
+            border: 1px solid #3f3f46;
+            border-radius: 6px;
+            color: #e5e5e5;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .settings-btn {
+            width: 100%;
+            padding: 8px 12px;
+            background: #27272a;
+            border: 1px solid #3f3f46;
+            border-radius: 6px;
+            color: #e5e5e5;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .settings-btn:hover {
+            background: #3f3f46;
+        }
+
+        /* Chat Area */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0a0a0a;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .message {
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .user-avatar {
+            background: #3f3f46;
+        }
+
+        .ai-avatar {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+
+        .message-content {
+            flex: 1;
+        }
+
+        .message-header {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .message-text {
+            line-height: 1.6;
+            font-size: 14px;
+            color: #d4d4d8;
+        }
+
+        .tool-execution {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+
+        .tool-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            color: #a1a1aa;
+        }
+
+        .code-block {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #27272a;
+        }
+
+        .code-lang {
+            color: #a1a1aa;
+            font-size: 12px;
+        }
+
+        .copy-btn {
+            background: #27272a;
+            border: none;
+            color: #e5e5e5;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .copy-btn:hover {
+            background: #3f3f46;
+        }
+
+        /* Input Area */
+        .input-area {
+            border-top: 1px solid #27272a;
+            padding: 20px;
+            background: #18181b;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .input-field {
+            flex: 1;
+            background: #27272a;
+            border: 1px solid #3f3f46;
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #e5e5e5;
+            font-size: 14px;
+            resize: none;
+            min-height: 48px;
+            max-height: 200px;
+            font-family: inherit;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            height: 48px;
+        }
+
+        .send-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Preview Panel */
+        .preview-panel {
+            width: 480px;
+            background: #18181b;
+            border-left: 1px solid #27272a;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #27272a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .url-bar {
+            flex: 1;
+            background: #27272a;
+            border: 1px solid #3f3f46;
+            border-radius: 6px;
+            padding: 6px 12px;
+            color: #a1a1aa;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .refresh-btn {
+            background: #27272a;
+            border: 1px solid #3f3f46;
+            color: #e5e5e5;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .refresh-btn:hover {
+            background: #3f3f46;
+        }
+
+        .preview-frame {
+            flex: 1;
+            background: white;
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
+
+        .preview-placeholder {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #52525b;
+            font-size: 14px;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #18181b;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3f3f46;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #52525b;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">🤖</div>
+                <span>AI Code Assistant</span>
+            </div>
+            <div class="ai-status">
+                <div class="status-dot"></div>
+                <span>GPT-4 Connected</span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <select class="project-selector">
+                        <option>coder-api</option>
+                        <option>my-react-app</option>
+                        <option>Create New Project...</option>
+                    </select>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="section-title">Files</div>
+                    <div class="file-tree">
+                        <div class="file-item">
+                            <span class="file-icon">📁</span>
+                            <span>src</span>
+                        </div>
+                        <div class="file-item" style="padding-left: 24px;">
+                            <span class="file-icon">📄</span>
+                            <span>server.ts</span>
+                        </div>
+                        <div class="file-item" style="padding-left: 24px;">
+                            <span class="file-icon">📄</span>
+                            <span>config.ts</span>
+                        </div>
+                        <div class="file-item" style="padding-left: 24px;">
+                            <span class="file-icon">📁</span>
+                            <span>routes</span>
+                        </div>
+                        <div class="file-item">
+                            <span class="file-icon">📄</span>
+                            <span>package.json</span>
+                        </div>
+                        <div class="file-item">
+                            <span class="file-icon">📄</span>
+                            <span>README.md</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ai-settings">
+                    <div class="section-title">AI Provider</div>
+                    <select class="ai-provider-select">
+                        <option>OpenAI - GPT-4</option>
+                        <option>OpenAI - GPT-3.5 Turbo</option>
+                        <option>Google - Gemini Pro</option>
+                        <option>Groq - Llama 3</option>
+                    </select>
+                    <button class="settings-btn">⚙️ API Keys & Settings</button>
+                </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div class="chat-area">
+                <div class="messages-container">
+                    <!-- User Message -->
+                    <div class="message">
+                        <div class="avatar user-avatar">👤</div>
+                        <div class="message-content">
+                            <div class="message-header">You</div>
+                            <div class="message-text">
+                                Add a new endpoint to list all users with pagination
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Message -->
+                    <div class="message">
+                        <div class="avatar ai-avatar">🤖</div>
+                        <div class="message-content">
+                            <div class="message-header">AI Assistant</div>
+                            <div class="message-text">
+                                I'll help you add a new endpoint for listing users with pagination. Let me create this for you.
+                            </div>
+
+                            <!-- Tool Execution -->
+                            <div class="tool-execution">
+                                <div class="tool-header">
+                                    <span>⚡</span>
+                                    <span>Executing: create_file</span>
+                                </div>
+                                <div style="color: #a1a1aa;">
+                                    Creating src/routes/users.ts...
+                                </div>
+                            </div>
+
+                            <!-- Code Block -->
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-lang">typescript</span>
+                                    <button class="copy-btn">Copy</button>
+                                </div>
+                                <pre style="margin: 0; color: #d4d4d8;">import { Router, Request, Response } from 'express';
+
+const router = Router();
+
+router.get('/', async (req: Request, res: Response) => {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+
+  // Implementation here
+  return res.json({ users: [], page, limit });
+});
+
+export default router;</pre>
+                            </div>
+
+                            <div class="message-text" style="margin-top: 16px;">
+                                I've created the users endpoint with pagination support. The endpoint accepts <code>page</code> and <code>limit</code> query parameters.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="input-area">
+                    <div class="input-container">
+                        <textarea
+                            class="input-field"
+                            placeholder="Describe what you want to build or change..."
+                            rows="1"
+                        ></textarea>
+                        <button class="send-btn">Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Panel -->
+            <div class="preview-panel">
+                <div class="preview-header">
+                    <input
+                        type="text"
+                        class="url-bar"
+                        value="http://localhost:3000"
+                        readonly
+                    />
+                    <button class="refresh-btn">🔄</button>
+                </div>
+                <div class="preview-placeholder">
+                    <div style="text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 12px;">🖼️</div>
+                        <div>Live Preview</div>
+                        <div style="font-size: 12px; color: #3f3f46; margin-top: 4px;">
+                            Start your app to see it here
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
