@@ -146,12 +146,16 @@ export function Sidebar() {
           )}
           {provider === 'gemini' && (
             <>
+              <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro (Latest)</option>
+              <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Latest)</option>
               <option value="gemini-pro">Gemini Pro</option>
-              <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
             </>
           )}
           {provider === 'groq' && (
-            <option value="llama-3.1-70b">Llama 3.1 70B</option>
+            <>
+              <option value="llama-3.1-70b-versatile">Llama 3.1 70B Versatile</option>
+              <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant</option>
+            </>
           )}
         </select>
       </div>

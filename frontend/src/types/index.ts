@@ -5,9 +5,11 @@ export type AIModel =
   | 'gpt-4'
   | 'gpt-4-turbo'
   | 'gpt-3.5-turbo'
+  | 'gemini-1.5-pro-latest'
+  | 'gemini-1.5-flash-latest'
   | 'gemini-pro'
-  | 'gemini-1.5-flash'
-  | 'llama-3.1-70b';
+  | 'llama-3.1-70b-versatile'
+  | 'llama-3.1-8b-instant';
 
 export interface AISettings {
   provider: AIProvider;

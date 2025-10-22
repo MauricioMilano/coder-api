@@ -46,6 +46,12 @@ export async function sendMessage(userMessage: string, projectId?: string) {
     } else if (provider === 'gemini') {
       const google = createGoogleGenerativeAI({ apiKey });
       aiProvider = google(model);
+    } else if (provider === 'groq') {
+      const groq = createOpenAI({
+        apiKey,
+        baseURL: 'https://api.groq.com/openai/v1',
+      });
+      aiProvider = groq(model);
     } else {
       throw new Error(`Unsupported provider: ${provider}`);
     }

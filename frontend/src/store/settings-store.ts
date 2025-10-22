@@ -23,7 +23,16 @@ export const useSettingsStore = create<SettingsStore>()(
       maxTokens: 4096,
       previewUrl: 'http://localhost:3000',
 
-      setProvider: (provider) => set({ provider }),
+      setProvider: (provider) => {
+        // Auto-select appropriate default model when changing provider
+        let defaultModel: AIModel = 'gpt-4';
+        if (provider === 'gemini') {
+          defaultModel = 'gemini-1.5-flash-latest';
+        } else if (provider === 'groq') {
+          defaultModel = 'llama-3.1-70b-versatile';
+        }
+        set({ provider, model: defaultModel });
+      },
       setModel: (model) => set({ model }),
       setApiKey: (apiKey) => set({ apiKey }),
       setPreviewUrl: (url) => set({ previewUrl: url }),
