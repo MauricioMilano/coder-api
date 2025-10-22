@@ -146,6 +146,8 @@ export function Sidebar() {
           )}
           {provider === 'gemini' && (
             <>
+              <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Experimental)</option>
+              <option value="gemini-exp-1206">Gemini Experimental 1206</option>
               <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro (Latest)</option>
               <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Latest)</option>
               <option value="gemini-pro">Gemini Pro</option>

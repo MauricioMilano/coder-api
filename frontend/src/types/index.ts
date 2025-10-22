@@ -5,6 +5,8 @@ export type AIModel =
   | 'gpt-4'
   | 'gpt-4-turbo'
   | 'gpt-3.5-turbo'
+  | 'gemini-2.0-flash-exp'
+  | 'gemini-exp-1206'
   | 'gemini-1.5-pro-latest'
   | 'gemini-1.5-flash-latest'
   | 'gemini-pro'

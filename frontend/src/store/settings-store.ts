@@ -27,7 +27,7 @@ export const useSettingsStore = create<SettingsStore>()(
         // Auto-select appropriate default model when changing provider
         let defaultModel: AIModel = 'gpt-4';
         if (provider === 'gemini') {
-          defaultModel = 'gemini-1.5-flash-latest';
+          defaultModel = 'gemini-2.0-flash-exp';
         } else if (provider === 'groq') {
           defaultModel = 'llama-3.1-70b-versatile';
         }
