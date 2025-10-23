@@ -6,9 +6,55 @@ import { useSettingsStore } from '@/store/settings-store';
 import { tools } from '@/lib/tools/definitions';
 import type { ChatMessage } from '@/types';
 
-export async function sendMessage(userMessage: string, projectId?: string) {
-  const { addMessage, updateMessage, setIsStreaming } = useChatStore.getState();
+// ChatSession type to store model/provider info per chat
+type ChatSession = {
+  id: string;
+  provider: string;
+  model: string;
+  apiKey: string;
+  temperature?: number;
+  maxTokens?: number;
+  messages: ChatMessage[];
+};
+
+// In-memory chat sessions (replace with persistent store if needed)
+const chatSessions: Record<string, ChatSession> = {};
+
+// Start a new chat session
+export function startChatSession(sessionId: string) {
   const { provider, model, apiKey, temperature, maxTokens } = useSettingsStore.getState();
+  if (!apiKey) throw new Error('API key not configured');
+  if (chatSessions[sessionId]) throw new Error('Chat session already exists');
+  chatSessions[sessionId] = {
+    id: sessionId,
+    provider,
+    model,
+    apiKey,
+    temperature,
+    maxTokens,
+    messages: [],
+  };
+}
+
+// Send a message in a chat session (model/provider cannot change)
+export async function sendMessage(userMessage: string, projectId?: string, sessionId?: string) {
+  const { addMessage, updateMessage, setIsStreaming } = useChatStore.getState();
+
+  // Use session if provided, else fallback to global settings (for legacy)
+  let session: ChatSession | undefined = sessionId ? chatSessions[sessionId] : undefined;
+  let provider, model, apiKey, temperature, maxTokens, messages: ChatMessage[];
+  if (session) {
+    ({ provider, model, apiKey, temperature, maxTokens, messages } = session);
+  } else {
+    // fallback for non-session usage
+    const settings = useSettingsStore.getState();
+    provider = settings.provider;
+    model = settings.model;
+    apiKey = settings.apiKey;
+    temperature = settings.temperature;
+    maxTokens = settings.maxTokens;
+    messages = [];
+  }
 
   if (!apiKey) {
     throw new Error('API key not configured');
@@ -22,6 +68,7 @@ export async function sendMessage(userMessage: string, projectId?: string) {
     timestamp: new Date(),
   };
   addMessage(userMsg);
+  if (session) session.messages.push(userMsg);
 
   // Create AI message placeholder
   const assistantMsgId = `assistant-${Date.now()}`;
@@ -34,6 +81,12 @@ export async function sendMessage(userMessage: string, projectId?: string) {
     toolResults: [],
   };
   addMessage(assistantMsg);
+  if (session) session.messages.push(assistantMsg);
+
+  // Prepare chat history for multi-turn context
+  const history = [...messages, userMsg]
+    .slice(-10)
+    .map((msg) => ({ role: msg.role, content: msg.content }));
 
   try {
     setIsStreaming(true);
@@ -76,10 +129,27 @@ Available tools:
 
 Be helpful, concise, and always explain your actions.`;
 
+    // Helper to append tool results to history for next turn
+    const appendToolResultsToHistory = (toolResults: any[], history: any[]) => {
+      if (!toolResults || toolResults.length === 0) return history;
+      // Add each tool result as an assistant message
+      return [
+        ...history,
+        ...toolResults.map((tr) => ({
+          role: 'assistant',
+          content:
+            `Tool '${tr.toolName}' result:\n` +
+            (tr.result ? JSON.stringify(tr.result, null, 2) : tr.error ? `Error: ${tr.error.message}` : ''),
+        })),
+      ];
+    };
+
+    let currentHistory = history;
+
     const result = await streamText({
       model: aiProvider,
       system: systemMessage,
-      messages: [{ role: 'user', content: userMessage }],
+      messages: currentHistory,
       tools,
       temperature,
       maxTokens,
@@ -99,6 +169,18 @@ Be helpful, concise, and always explain your actions.`;
           })),
         });
         setIsStreaming(false);
+
+        if (toolResults && toolResults.length > 0) {
+          currentHistory = appendToolResultsToHistory(toolResults, currentHistory);
+          if (session) {
+            session.messages.push({
+              id: `tool-result-${Date.now()}`,
+              role: 'assistant',
+              content: `Tool results: ${JSON.stringify(toolResults, null, 2)}`,
+              timestamp: new Date(),
+            });
+          }
+        }
       },
     });
 
@@ -108,6 +190,11 @@ Be helpful, concise, and always explain your actions.`;
         content: assistantMsg.content + delta,
       });
       assistantMsg.content += delta;
+      if (session) {
+        // Update session message content for streaming
+        const msg = session.messages.find((m) => m.id === assistantMsgId);
+        if (msg) msg.content = assistantMsg.content;
+      }
     }
 
   } catch (error) {

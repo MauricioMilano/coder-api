@@ -32,7 +32,7 @@ export function Sidebar() {
 
   const loadFileTree = async () => {
     if (!selectedProject) return;
-    const response = await coderAPI.listFileTree(selectedProject.projectId);
+    const response = await coderAPI.listFileTree(selectedProject.id);
     if (response.success && response.data) {
       setFileTree(response.data.entries || []);
     }
@@ -54,7 +54,6 @@ export function Sidebar() {
     return entries.map((entry) => {
       const isExpanded = expandedDirs.has(entry.path);
       const isDir = entry.type === 'directory';
-
       return (
         <div key={entry.path}>
           <div
@@ -96,14 +95,14 @@ export function Sidebar() {
         </label>
         <select
           className="w-full px-3 py-2 bg-secondary border border-input rounded-md text-sm"
-          value={selectedProject?.projectId || ''}
+          value={selectedProject?.id || ''}
           onChange={(e) => {
-            const project = projects.find(p => p.projectId === e.target.value);
+            const project = projects.find(p => p.id === e.target.value);
             if (project) setSelectedProject(project);
           }}
         >
           {projects.map((project) => (
-            <option key={project.projectId} value={project.projectId}>
+            <option key={project.id} value={project.id}>
               {project.name}
             </option>
           ))}

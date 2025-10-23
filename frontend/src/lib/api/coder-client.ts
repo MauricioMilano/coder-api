@@ -27,7 +27,12 @@ class CoderAPIClient {
     });
 
     const data = await response.json();
-    return data;
+    const result = {
+      success: response.ok,
+      data: data,
+      error: response.ok ? undefined : data,
+    };
+    return result;
   }
 
   // Project management

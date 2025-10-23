@@ -23,7 +23,7 @@ export interface AISettings {
 
 // Project types
 export interface Project {
-  projectId: string;
+  id: string;
   name: string;
   rootAbsPath: string;
   createdAt: string;

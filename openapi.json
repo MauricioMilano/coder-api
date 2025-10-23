@@ -99,7 +99,7 @@
                   "value": {
                     "source": {
                       "adopt": {
-                        "path": "/srv/workspace/projects/already-existing"
+                        "path": "/srv/workspace/api/projects/already-existing"
                       }
                     },
                     "name": "existing-project"
@@ -116,7 +116,7 @@
         }
       }
     },
-    "/projects/{projectId}": {
+    "/api/projects/{projectId}": {
       "patch": {
         "summary": "Edit Project Name",
         "operationId": "editProjectName",
@@ -161,7 +161,7 @@
         }
       }
     },
-    "/projects/{projectId}/filetree": {
+    "/api/projects/{projectId}/filetree": {
       "get": {
         "summary": "List Filetree",
         "operationId": "listFiletree",
@@ -214,7 +214,7 @@
         }
       }
     },
-    "/projects/{projectId}/files": {
+    "/api/projects/{projectId}/files": {
       "get": {
         "summary": "Read Project File",
         "operationId": "readProjectFile",
@@ -521,7 +521,7 @@
         }
       }
     },
-    "/projects/{projectId}/files/replace": {
+    "/api/projects/{projectId}/files/replace": {
       "patch": {
         "summary": "Replace Text in File",
         "operationId": "replaceTextInFile",
@@ -611,7 +611,7 @@
         }
       }
     },
-    "/projects/{projectId}/files/lines": {
+    "/api/projects/{projectId}/files/lines": {
       "patch": {
         "summary": "Line-based Operations on File",
         "operationId": "linesOperationOnFile",
@@ -699,7 +699,7 @@
         }
       }
     },
-    "/projects/{projectId}/files/code-block": {
+    "/api/projects/{projectId}/files/code-block": {
       "patch": {
         "summary": "Smart Code Block Replacement",
         "operationId": "codeBlockReplacement",
@@ -776,7 +776,7 @@
         }
       }
     },
-    "/projects/{projectId}/files/insert": {
+    "/api/projects/{projectId}/files/insert": {
       "patch": {
         "summary": "Insert at Character Position",
         "operationId": "insertAtPosition",
@@ -843,7 +843,7 @@
         }
       }
     },
-    "/projects/{projectId}/files/diff": {
+    "/api/projects/{projectId}/files/diff": {
       "patch": {
         "summary": "Apply Unified Diff",
         "operationId": "applyUnifiedDiff",
@@ -917,7 +917,7 @@
         }
       }
     },
-    "/projects/{projectId}/bash": {
+    "/api/projects/{projectId}/bash": {
       "post": {
         "summary": "Run Bash in Project",
         "operationId": "runBashCommand",
@@ -959,7 +959,7 @@
         }
       }
     },
-    "/projects/{projectId}/pm2/start": {
+    "/api/projects/{projectId}/pm2/start": {
       "post": {
         "summary": "Start PM2 Application",
         "operationId": "startPM2Application",
@@ -1078,7 +1078,7 @@
         }
       }
     },
-    "/projects/{projectId}/pm2/stop": {
+    "/api/projects/{projectId}/pm2/stop": {
       "post": {
         "summary": "Stop PM2 Application",
         "operationId": "stopPM2Application",
@@ -1117,7 +1117,7 @@
         }
       }
     },
-    "/projects/{projectId}/pm2/restart": {
+    "/api/projects/{projectId}/pm2/restart": {
       "post": {
         "summary": "Restart PM2 Application",
         "operationId": "restartPM2Application",
@@ -1156,7 +1156,7 @@
         }
       }
     },
-    "/projects/{projectId}/pm2": {
+    "/api/projects/{projectId}/pm2": {
       "delete": {
         "summary": "Delete PM2 Application",
         "operationId": "deletePM2Application",
@@ -1195,7 +1195,7 @@
         }
       }
     },
-    "/projects/{projectId}/pm2/health": {
+    "/api/projects/{projectId}/pm2/health": {
       "get": {
         "summary": "Check PM2 Health",
         "operationId": "checkPM2Health",
@@ -1234,7 +1234,7 @@
         }
       }
     },
-    "/projects/{projectId}/pm2/list": {
+    "/api/projects/{projectId}/pm2/list": {
       "get": {
         "summary": "List PM2 Applications",
         "operationId": "listPM2Applications",
@@ -1256,7 +1256,7 @@
         }
       }
     },
-    "/projects/{projectId}/pm2/status": {
+    "/api/projects/{projectId}/pm2/status": {
       "get": {
         "summary": "Get PM2 Application Status",
         "operationId": "getPM2ApplicationStatus",
@@ -1287,7 +1287,7 @@
         }
       }
     },
-    "/projects/{projectId}/pm2/logs": {
+    "/api/projects/{projectId}/pm2/logs": {
       "get": {
         "summary": "Get PM2 Application Logs",
         "operationId": "getPM2ApplicationLogs",
@@ -1328,7 +1328,7 @@
         }
       }
     },
-    "/projects/{projectId}/pm2/kill-all": {
+    "/api/projects/{projectId}/pm2/kill-all": {
       "post": {
         "summary": "Stop All PM2 Applications",
         "operationId": "stopAllPM2Applications",
@@ -1350,7 +1350,7 @@
         }
       }
     },
-    "/projects/": {
+    "/api/projects/": {
       "get": {
         "summary": "Get Project",
         "operationId": "getProject",

@@ -49,12 +49,12 @@ server.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // REST API Routes
-server.use('/projects', require('./routes/projects'));
-server.use('/projects/:projectId/filetree', require('./routes/filetree'));
-server.use('/projects/:projectId/files', require('./routes/files'));
-server.use('/projects/:projectId/search', require('./routes/search'));
-server.use('/projects/:projectId/bash', require('./routes/bash'));
-server.use('/projects/:projectId/pm2', require('./routes/pm2'));
+server.use('/api/projects', require('./routes/projects'));
+server.use('/api/projects/:projectId/filetree', require('./routes/filetree'));
+server.use('/api/projects/:projectId/files', require('./routes/files'));
+server.use('/api/projects/:projectId/search', require('./routes/search'));
+server.use('/api/projects/:projectId/bash', require('./routes/bash'));
+server.use('/api/projects/:projectId/pm2', require('./routes/pm2'));
 
 // MCP Server integration - Add MCP endpoints to the main server
 import { mcpServer } from './mcp-server';
