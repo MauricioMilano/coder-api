@@ -1,10 +1,11 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { 
-  createProject, 
-  renameProject, 
-  listProjects, 
-  getProject 
+import {
+  createProject,
+  renameProject,
+  listProjects,
+  deleteProject,
+  getProject
 } from '../core/projects';
 
 export function registerProjectTools(mcpServer: McpServer) {
@@ -138,6 +139,35 @@ export function registerProjectTools(mcpServer: McpServer) {
         return {
           content: [{ type: 'text', text: `Error: ${error.message || JSON.stringify(error)}` }],
           isError: true
+        };
+      }
+    }
+  );
+
+  // Delete Project
+  mcpServer.registerTool(
+    'delete-project',
+    {
+      title: 'Delete Project',
+      description: 'Delete an existing project',
+      inputSchema: {
+        projectId: z.string(),
+      },
+      outputSchema: {
+        message: z.string(),
+      },
+    },
+    async ({ projectId }: { projectId: string }) => {
+      try {
+        await deleteProject(projectId);
+        return {
+          content: [{ type: 'text', text: JSON.stringify({ message: `Project ${projectId} deleted successfully` }) }],
+          structuredContent: { message: `Project ${projectId} deleted successfully` },
+        };
+      } catch (error: any) {
+        return {
+          content: [{ type: 'text', text: `Error: ${error.message || JSON.stringify(error)}` }],
+          isError: true,
         };
       }
     }

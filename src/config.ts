@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const envSchema = z.object({
-  PORT: z.string().default('3007'),
+  PORT: z.string(),
   WORKSPACE_ROOT: z.string().min(1),
   ALLOW_NETWORK: z.enum(['true', 'false']).default('false'),
   MAX_FILE_SIZE: z.string().default('5000000'),

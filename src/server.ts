@@ -95,7 +95,7 @@ server.post('/mcp', async (req: Request, res: Response) => {
     await mcpServer.connect(transport);
     await transport.handleRequest(req, res, req.body);
   } catch (error) {
-    logger.error('MCP request error:', error);
+    logger.error({ error }, 'MCP request error:');
     if (!res.headersSent) {
       res.status(500).json({
         jsonrpc: '2.0',
@@ -130,7 +130,7 @@ server.get('/mcp-sse', async (req: Request, res: Response) => {
     });
 
     res.on('error', (error) => {
-      logger.error(`MCP SSE client ${sessionId} error:`, error);
+      logger.error({ error }, `MCP SSE client ${sessionId} error:`);
       mcpSseTransports.delete(sessionId);
     });
 
@@ -139,7 +139,7 @@ server.get('/mcp-sse', async (req: Request, res: Response) => {
     logger.info(`MCP SSE client ${sessionId} connected`);
 
   } catch (error) {
-    logger.error('MCP SSE connection error:', error);
+    logger.error({ error }, 'MCP SSE connection error:');
     if (!res.headersSent) {
       res.status(500).json({
         error: 'Failed to establish MCP SSE connection'
@@ -164,7 +164,7 @@ server.post('/mcp-messages', async (req: Request, res: Response) => {
   try {
     await transport.handlePostMessage(req, res, req.body);
   } catch (error) {
-    logger.error('MCP SSE message error:', error);
+    logger.error({ error }, 'MCP SSE message error:');
     res.status(500).json({ error: 'Failed to handle MCP message' });
   }
 });

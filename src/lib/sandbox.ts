@@ -17,29 +17,46 @@ export async function spawnBash(command: string, opts: {
   return new Promise((resolve) => {
     const start = Date.now();
 
-    let shellCommand: string;
-    let shellArgs: string[];
+    console.log(`[spawnBash] Starting command execution (simple approach)`);
+    console.log(`[spawnBash] Working directory: ${opts.cwd}`);
+    console.log(`[spawnBash] Command: ${command}`);
+    console.log(`[spawnBash] Platform: ${process.platform}`);
+
+    let shellCommand: string = 'sh'; // Default fallback
+    let shellArgs: string[] = ['-c', command]; // Default fallback
 
     if (process.platform === 'win32') {
       shellCommand = 'powershell.exe';
       shellArgs = ['-Command', command];
     } else {
-      const which = (cmd: string) => {
+      const fs = require('fs');
+      function isExecutable(file: string) {
         try {
-          return require('child_process').execSync(`command -v ${cmd}`, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+          fs.accessSync(file, fs.constants.X_OK);
+          return fs.statSync(file).isFile();
         } catch {
-          return null;
+          return false;
         }
-      };
-      const bashPath = which('bash');
-      if (bashPath) {
-        shellCommand = bashPath;
-        shellArgs = ['-lc', command];
+      }
+      console.log(`[spawnBash] Detecting available shell...`);
+      // Always prefer /bin/bash if available
+      // Do NOT quote the entire command; let the shell parse it normally
+      if (isExecutable('/bin/sh')) {
+        console.log(`[spawnBash] Using /bin/sh`);
+        shellCommand = '/bin/sh';
+        shellArgs = ['-c', command];
+      } else if (isExecutable('/usr/bin/sh')) {
+        console.log(`[spawnBash] Using /usr/bin/sh`);
+        shellCommand = '/usr/bin/sh';
+        shellArgs = ['-c', command];
       } else {
+        console.log(`[spawnBash] No shell found, falling back to 'sh'`);
         shellCommand = 'sh';
         shellArgs = ['-c', command];
       }
     }
+
+    console.log(`[spawnBash] Using shell: ${shellCommand} with args: ${JSON.stringify(shellArgs)}`);
 
     const proc = spawn(shellCommand, shellArgs, {
       cwd: opts.cwd,
@@ -48,25 +65,44 @@ export async function spawnBash(command: string, opts: {
       stdio: ['ignore', 'pipe', 'pipe'],
       detached: false,
     });
+    
     let stdout = Buffer.alloc(0);
     let stderr = Buffer.alloc(0);
     let killed = false;
     const maxOut = opts.maxStdoutBytes ?? config.maxStdoutBytes;
     const maxErr = opts.maxStderrBytes ?? config.maxStdoutBytes;
+    
+    proc.on('error', (error) => {
+      console.error(`[spawnBash] Process error: ${error.message}`);
+      clearTimeout(timeout);
+      resolve({
+        exit_code: 1,
+        stdout: '',
+        stderr: error.message,
+        duration_ms: Date.now() - start,
+        truncated: { stdout: false, stderr: false }
+      });
+    });
+    
     proc.stdout.on('data', (chunk) => {
       if (stdout.length < maxOut) stdout = Buffer.concat([stdout, chunk]);
       if (stdout.length > maxOut) proc.kill('SIGKILL');
     });
+    
     proc.stderr.on('data', (chunk) => {
       if (stderr.length < maxErr) stderr = Buffer.concat([stderr, chunk]);
       if (stderr.length > maxErr) proc.kill('SIGKILL');
     });
+    
     const timeout = setTimeout(() => {
       killed = true;
+      console.log(`[spawnBash] Command timed out after ${opts.timeoutSec ?? config.bashTimeoutSec}s, killing process`);
       proc.kill('SIGKILL');
     }, (opts.timeoutSec ?? config.bashTimeoutSec) * 1000);
+    
     proc.on('close', (code) => {
       clearTimeout(timeout);
+      console.log(`[spawnBash] Process completed with exit code: ${killed ? 'KILLED' : code}, duration: ${Date.now() - start}ms`);
       resolve({
         exit_code: killed ? null : code,
         stdout: stdout.slice(0, maxOut).toString('utf-8'),

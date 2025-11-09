@@ -29,14 +29,17 @@ export function registerBashTools(mcpServer: McpServer) {
       }
     },
     async ({ projectId, command, workdir, timeout_sec, env }) => {
+      console.log(`[MCP bash] Tool called with projectId: ${projectId}, command: ${command}`);
       try {
         const result = await runBashCommand(projectId, { command, workdir, timeout_sec, env });
         const { stdout, stderr, exit_code, duration_ms, truncated } = result;
+        console.log(`[MCP bash] Command completed successfully, exit_code: ${exit_code}`);
         return {
           content: [{ type: 'text', text: JSON.stringify({ stdout, stderr, exit_code, duration_ms, truncated }) }],
           structuredContent: { stdout, stderr, exit_code, duration_ms, truncated }
         };
       } catch (error: any) {
+        console.error(`[MCP bash] Tool execution failed:`, error);
         return {
           content: [{ type: 'text', text: `Error: ${error.message || JSON.stringify(error)}` }],
           isError: true
