@@ -4,6 +4,7 @@ import { registerFileTools } from './files';
 import { registerBashTools } from './bash';
 import { registerFiletreeTools } from './filetree';
 import { registerSearchTools } from './search';
+import { registerMcpTaskTools } from './tasks';
 import { registerPM2Tools } from './pm2';
 
 export function registerAllMcpTools(mcpServer: McpServer) {
@@ -14,4 +15,5 @@ export function registerAllMcpTools(mcpServer: McpServer) {
   registerFiletreeTools(mcpServer);
   registerSearchTools(mcpServer);
   registerPM2Tools(mcpServer);
+  registerMcpTaskTools(mcpServer);
 }

@@ -1,0 +1,147 @@
+
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Coder API",
+    "version": "1.0.0",
+    "description": "API for managing code projects, files, and tasks within sandboxed environments."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Projects",
+      "description": "Project management operations"
+    },
+    {
+      "name": "Files",
+      "description": "File system operations within projects"
+    },
+    {
+      "name": "Tasks",
+      "description": "Task management within projects"
+    },
+    {
+      "name": "System",
+      "description": "System-level operations like bash execution"
+    }
+  ],
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Task": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the task"
+          },
+          "title": {
+            "type": "string",
+            "description": "Concise name for the task"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the task"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "in-progress", "completed", "blocked"],
+            "description": "Current status of the task"
+          },
+          "priority": {
+            "type": "number",
+            "format": "int32",
+            "description": "Numerical priority of the task (e.g., 1-5)"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Due date for the task (ISO 8601 format)"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of task creation (ISO 8601 format)"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the last update (ISO 8601 format)"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "NewTask": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Concise name for the task"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the task"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "in-progress", "completed", "blocked"],
+            "description": "Current status of the task",
+            "default": "pending"
+          },
+          "priority": {
+            "type": "number",
+            "format": "int32",
+            "description": "Numerical priority of the task (e.g., 1-5)"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Due date for the task (ISO 8601 format)"
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "UpdateTask": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Concise name for the task"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the task"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "in-progress", "completed", "blocked"],
+            "description": "Current status of the task"
+          },
+          "priority": {
+            "type": "number",
+            "format": "int32",
+            "description": "Numerical priority of the task (e.g., 1-5)"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Due date for the task (ISO 8601 format)"
+          }
+        }
+      }
+    }
+  }
+}

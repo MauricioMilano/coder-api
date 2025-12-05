@@ -8,6 +8,7 @@ import pino from 'pino';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { config } from './config';
+import tasksRoutes from './routes/tasks';
 import { problemErrorHandler } from './lib/problem-handler';
 
 const server = express();
@@ -41,6 +42,7 @@ const limiter = rateLimit({
   max: 100, // limit each IP to 100 requests per windowMs
 });
 server.use(limiter);
+server.use('/projects/:projectId/tasks', tasksRoutes);
 
 // Request ID middleware
 server.use((req: Request, res: Response, next: NextFunction) => {
@@ -186,7 +188,8 @@ server.get('/capabilities', (req: Request, res: Response) => {
           '/projects/:projectId/filetree',
           '/projects/:projectId/files',
           '/projects/:projectId/search',
-          '/projects/:projectId/bash'
+          '/projects/:projectId/bash',
+          '/projects/:projectId/tasks'
         ]
       },
       mcp: {
@@ -206,7 +209,12 @@ server.get('/capabilities', (req: Request, res: Response) => {
           'run-bash',
           'list-projects',
           'get-project-details',
-          'list-filetree'
+          'list-filetree',
+          'create_task',
+          'get_task',
+          'list_tasks',
+          'update_task',
+          'delete_task'
         ]
       }
     },
