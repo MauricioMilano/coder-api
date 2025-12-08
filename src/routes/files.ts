@@ -7,7 +7,37 @@ const router = Router({ mergeParams: true });
 const initRoutes = async () => {
   const { getFile, createFile, patchFile, deleteFile } = await import('../core/files');
 
-  // GET /projects/:projectId/files
+  /**
+   * @openapi
+   * /projects/{projectId}/files:
+   *   get:
+   *     tags:
+   *       - Files
+   *     summary: Read a file from a project
+   *     parameters:
+   *       - in: path
+   *         name: projectId
+   *         required: true
+   *         schema:
+   *           type: string
+   *       - in: query
+   *         name: path
+   *         required: true
+   *         schema:
+   *           type: string
+   *       - in: query
+   *         name: encoding
+   *         schema:
+   *           type: string
+   *           enum: [text, base64]
+   *     responses:
+   *       '200':
+   *         description: File content
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/FileContent'
+   */
   router.get('/', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;
@@ -28,7 +58,29 @@ const initRoutes = async () => {
     }
   });
 
-  // POST /projects/:projectId/files
+  /**
+   * @openapi
+   * /projects/{projectId}/files:
+   *   post:
+   *     tags:
+   *       - Files
+   *     summary: Create a new file
+   *     parameters:
+   *       - in: path
+   *         name: projectId
+   *         required: true
+   *         schema:
+   *           type: string
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/CreateFileRequest'
+   *     responses:
+   *       '200':
+   *         description: Created file info
+   */
   router.post('/', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;
@@ -45,7 +97,34 @@ const initRoutes = async () => {
     }
   });
 
-  // PATCH /projects/:projectId/files
+  /**
+   * @openapi
+   * /projects/{projectId}/files:
+   *   patch:
+   *     tags:
+   *       - Files
+   *     summary: Patch a file using a specified operation
+   *     parameters:
+   *       - in: path
+   *         name: projectId
+   *         required: true
+   *         schema:
+   *           type: string
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               path:
+   *                 type: string
+   *               operation:
+   *                 $ref: '#/components/schemas/PatchOperation'
+   *     responses:
+   *       '200':
+   *         description: Patch result
+   */
   router.patch('/', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;
@@ -62,7 +141,31 @@ const initRoutes = async () => {
     }
   });
 
-  // DELETE /projects/:projectId/files
+  /**
+   * @openapi
+   * /projects/{projectId}/files:
+   *   delete:
+   *     tags:
+   *       - Files
+   *     summary: Delete a file
+   *     parameters:
+   *       - in: path
+   *         name: projectId
+   *         required: true
+   *         schema:
+   *           type: string
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               path:
+   *                 type: string
+   *     responses:
+   *       '200':
+   *         description: Deletion result
+   */
   router.delete('/', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;
@@ -79,7 +182,31 @@ const initRoutes = async () => {
     }
   });
 
-  // PATCH /projects/:projectId/files/replace - Replace text operations
+  /**
+   * @openapi
+   * /projects/{projectId}/files/replace:
+   *   patch:
+   *     tags:
+   *       - Files
+   *     summary: Replace text in a file
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               path:
+   *                 type: string
+   *               find:
+   *                 type: string
+   *               replace:
+   *                 type: string
+   *               all:
+   *                 type: boolean
+   *     responses:
+   *       '200':
+   *         description: Replace result
+   */
   router.patch('/replace', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;
@@ -111,7 +238,33 @@ const initRoutes = async () => {
     }
   });
 
-  // PATCH /projects/:projectId/files/lines - Line-based operations
+  /**
+   * @openapi
+   * /projects/{projectId}/files/lines:
+   *   patch:
+   *     tags:
+   *       - Files
+   *     summary: Line-based file operations
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               path:
+   *                 type: string
+   *               action:
+   *                 type: string
+   *               line_number:
+   *                 type: integer
+   *               count:
+   *                 type: integer
+   *               content:
+   *                 type: string
+   *     responses:
+   *       '200':
+   *         description: Lines operation result
+   */
   router.patch('/lines', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;
@@ -142,7 +295,33 @@ const initRoutes = async () => {
     }
   });
 
-  // PATCH /projects/:projectId/files/code-block - Smart code block replacement
+  /**
+   * @openapi
+   * /projects/{projectId}/files/code-block:
+   *   patch:
+   *     tags:
+   *       - Files
+   *     summary: Replace code block in file using context
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               path:
+   *                 type: string
+   *               find_context:
+   *                 type: string
+   *               replace_with:
+   *                 type: string
+   *               fuzzy_match:
+   *                 type: boolean
+   *               language:
+   *                 type: string
+   *     responses:
+   *       '200':
+   *         description: Code block patch result
+   */
   router.patch('/code-block', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;
@@ -173,7 +352,29 @@ const initRoutes = async () => {
     }
   });
 
-  // PATCH /projects/:projectId/files/insert - Insert at character position
+  /**
+   * @openapi
+   * /projects/{projectId}/files/insert:
+   *   patch:
+   *     tags:
+   *       - Files
+   *     summary: Insert content at a character position
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               path:
+   *                 type: string
+   *               position:
+   *                 type: integer
+   *               content:
+   *                 type: string
+   *     responses:
+   *       '200':
+   *         description: Insert result
+   */
   router.patch('/insert', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;
@@ -202,7 +403,29 @@ const initRoutes = async () => {
     }
   });
 
-  // PATCH /projects/:projectId/files/diff - Traditional unified diff
+  /**
+   * @openapi
+   * /projects/{projectId}/files/diff:
+   *   patch:
+   *     tags:
+   *       - Files
+   *     summary: Apply a unified diff to a file
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               path:
+   *                 type: string
+   *               patch:
+   *                 type: string
+   *               fuzz_factor:
+   *                 type: integer
+   *     responses:
+   *       '200':
+   *         description: Diff applied result
+   */
   router.patch('/diff', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;

@@ -149,7 +149,7 @@ function applyReplaceOperation(originalContent: string, op: any) {
 function applyLinesOperation(originalContent: string, op: any) {
   const lines = originalContent.split('\n');
   const idx = op.line_number - 1;
-  let modified = [...lines];
+  const modified = [...lines];
   switch (op.action) {
     case 'insert':
       modified.splice(idx, 0, ...op.content.split('\n'));

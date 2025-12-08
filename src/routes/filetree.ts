@@ -8,6 +8,45 @@ const router = Router({ mergeParams: true });
 const initRoutes = async () => {
   const { listFiletree } = await import('../core/filetree');
 
+  /**
+   * @openapi
+   * /projects/{projectId}/filetree:
+   *   get:
+   *     tags:
+   *       - Filetree
+   *     summary: List filetree entries for a project
+   *     parameters:
+   *       - in: path
+   *         name: projectId
+   *         required: true
+   *         schema:
+   *           type: string
+   *       - in: query
+   *         name: path
+   *         schema:
+   *           type: string
+   *       - in: query
+   *         name: depth
+   *         schema:
+   *           type: integer
+   *       - in: query
+   *         name: glob
+   *         schema:
+   *           type: string
+   *       - in: query
+   *         name: max_entries
+   *         schema:
+   *           type: integer
+   *     responses:
+   *       '200':
+   *         description: Filetree list
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/FileEntry'
+   */
   router.get('/', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;

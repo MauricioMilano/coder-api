@@ -16,7 +16,32 @@ const initRoutes = async () => {
     stopAllPM2Apps
   } = await import('../core/pm2');
 
-  // POST /projects/:projectId/pm2/start - Start PM2 application
+  /**
+   * @openapi
+   * /projects/{projectId}/pm2/start:
+   *   post:
+   *     tags:
+   *       - PM2
+   *     summary: Start a PM2 application for a project
+   *     parameters:
+   *       - in: path
+   *         name: projectId
+   *         required: true
+   *         schema:
+   *           type: string
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/PM2AppOptions'
+   *     responses:
+   *       '200':
+   *         description: Started process information
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/PM2AppInfo'
+   */
   router.post('/start', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;
@@ -51,7 +76,31 @@ const initRoutes = async () => {
     }
   });
 
-  // POST /projects/:projectId/pm2/stop - Stop PM2 application
+  /**
+   * @openapi
+   * /projects/{projectId}/pm2/stop:
+   *   post:
+   *     tags:
+   *       - PM2
+   *     summary: Stop a PM2 application
+   *     parameters:
+   *       - in: path
+   *         name: projectId
+   *         required: true
+   *         schema:
+   *           type: string
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               nameOrId:
+   *                 type: string
+   *     responses:
+   *       '200':
+   *         description: Stop result
+   */
   router.post('/stop', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;
@@ -69,7 +118,31 @@ const initRoutes = async () => {
     }
   });
 
-  // POST /projects/:projectId/pm2/restart - Restart PM2 application
+  /**
+   * @openapi
+   * /projects/{projectId}/pm2/restart:
+   *   post:
+   *     tags:
+   *       - PM2
+   *     summary: Restart a PM2 application
+   *     parameters:
+   *       - in: path
+   *         name: projectId
+   *         required: true
+   *         schema:
+   *           type: string
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               nameOrId:
+   *                 type: string
+   *     responses:
+   *       '200':
+   *         description: Restart result
+   */
   router.post('/restart', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;
@@ -87,7 +160,31 @@ const initRoutes = async () => {
     }
   });
 
-  // DELETE /projects/:projectId/pm2 - Delete PM2 application
+  /**
+   * @openapi
+   * /projects/{projectId}/pm2:
+   *   delete:
+   *     tags:
+   *       - PM2
+   *     summary: Delete PM2 application
+   *     parameters:
+   *       - in: path
+   *         name: projectId
+   *         required: true
+   *         schema:
+   *           type: string
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               nameOrId:
+   *                 type: string
+   *     responses:
+   *       '200':
+   *         description: Deletion result
+   */
   router.delete('/', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;
@@ -105,7 +202,17 @@ const initRoutes = async () => {
     }
   });
 
-  // GET /projects/:projectId/pm2/health - Check PM2 installation and health
+  /**
+   * @openapi
+   * /projects/{projectId}/pm2/health:
+   *   get:
+   *     tags:
+   *       - PM2
+   *     summary: Check PM2 installation and health
+   *     responses:
+   *       '200':
+   *         description: Health check result
+   */
   router.get('/health', async (req: Request, res: Response) => {
     try {
       const { checkPM2Installation } = await import('../core/pm2');
@@ -119,7 +226,23 @@ const initRoutes = async () => {
     }
   });
 
-  // GET /projects/:projectId/pm2/list - List PM2 applications
+  /**
+   * @openapi
+   * /projects/{projectId}/pm2/list:
+   *   get:
+   *     tags:
+   *       - PM2
+   *     summary: List PM2 applications for a project
+   *     parameters:
+   *       - in: path
+   *         name: projectId
+   *         required: true
+   *         schema:
+   *           type: string
+   *     responses:
+   *       '200':
+   *         description: List of PM2 apps
+   */
   router.get('/list', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;
@@ -137,7 +260,28 @@ const initRoutes = async () => {
     }
   });
 
-  // GET /projects/:projectId/pm2/status - Get PM2 application status
+  /**
+   * @openapi
+   * /projects/{projectId}/pm2/status:
+   *   get:
+   *     tags:
+   *       - PM2
+   *     summary: Get PM2 application status
+   *     parameters:
+   *       - in: path
+   *         name: projectId
+   *         required: true
+   *         schema:
+   *           type: string
+   *       - in: query
+   *         name: nameOrId
+   *         required: true
+   *         schema:
+   *           type: string
+   *     responses:
+   *       '200':
+   *         description: Status info
+   */
   router.get('/status', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;
@@ -161,7 +305,31 @@ const initRoutes = async () => {
     }
   });
 
-  // GET /projects/:projectId/pm2/logs - Get PM2 application logs
+  /**
+   * @openapi
+   * /projects/{projectId}/pm2/logs:
+   *   get:
+   *     tags:
+   *       - PM2
+   *     summary: Get PM2 application logs
+   *     parameters:
+   *       - in: path
+   *         name: projectId
+   *         required: true
+   *         schema:
+   *           type: string
+   *       - in: query
+   *         name: nameOrId
+   *         schema:
+   *           type: string
+   *       - in: query
+   *         name: lines
+   *         schema:
+   *           type: integer
+   *     responses:
+   *       '200':
+   *         description: Logs
+   */
   router.get('/logs', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;
@@ -186,7 +354,23 @@ const initRoutes = async () => {
     }
   });
 
-  // POST /projects/:projectId/pm2/kill-all - Stop all PM2 applications
+  /**
+   * @openapi
+   * /projects/{projectId}/pm2/kill-all:
+   *   post:
+   *     tags:
+   *       - PM2
+   *     summary: Stop all PM2 applications for a project
+   *     parameters:
+   *       - in: path
+   *         name: projectId
+   *         required: true
+   *         schema:
+   *           type: string
+   *     responses:
+   *       '200':
+   *         description: Result of stopping all apps
+   */
   router.post('/kill-all', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;

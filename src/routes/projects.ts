@@ -2,10 +2,83 @@ import { Router, Request, Response } from 'express';
 
 const router = Router();
 
+/*
+  OpenAPI JSDoc for projects routes - includes request/response schemas
+*/
+
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     Project:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: Project identifier
+ *         name:
+ *           type: string
+ *         path:
+ *           type: string
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *     CreateProjectRequest:
+ *       type: object
+ *       required:
+ *         - name
+ *       properties:
+ *         source:
+ *           type: string
+ *           description: Optional git URL or template source
+ *         name:
+ *           type: string
+ *     RenameProjectRequest:
+ *       type: object
+ *       required:
+ *         - name
+ *       properties:
+ *         name:
+ *           type: string
+ *     ErrorResponse:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *         details:
+ *           type: object
+ */
+
 const initRoutes = async () => {
   const { createProject, renameProject, listProjects, getProject } = await import('../core/projects');
 
-  // POST /projects
+  /**
+   * @openapi
+   * /projects:
+   *   post:
+   *     tags:
+   *       - Projects
+   *     summary: Create a new project
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/CreateProjectRequest'
+   *     responses:
+   *       '200':
+   *         description: Created project
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Project'
+   *       '4XX':
+   *         description: Client error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ErrorResponse'
+   */
   router.post('/', async (req: Request, res: Response) => {
     try {
       const { source, name } = req.body;
@@ -20,7 +93,39 @@ const initRoutes = async () => {
     }
   });
 
-  // PATCH /projects/:projectId
+  /**
+   * @openapi
+   * /projects/{projectId}:
+   *   patch:
+   *     tags:
+   *       - Projects
+   *     summary: Rename an existing project
+   *     parameters:
+   *       - in: path
+   *         name: projectId
+   *         required: true
+   *         schema:
+   *           type: string
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/RenameProjectRequest'
+   *     responses:
+   *       '200':
+   *         description: Renamed project info
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Project'
+   *       '4XX':
+   *         description: Client error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ErrorResponse'
+   */
   router.patch('/:projectId', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;
@@ -35,7 +140,25 @@ const initRoutes = async () => {
     }
   });
 
-  // GET /projects
+  /**
+   * @openapi
+   * /projects:
+   *   get:
+   *     tags:
+   *       - Projects
+   *     summary: List projects
+   *     responses:
+   *       '200':
+   *         description: OK
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/Project'
+   *       '4XX':
+   *         description: Client error
+   */
   router.get('/', async (_req: Request, res: Response) => {
     try {
       const projects = await listProjects();
@@ -48,7 +171,33 @@ const initRoutes = async () => {
     }
   });
 
-  // GET /projects/:projectId
+  /**
+   * @openapi
+   * /projects/{projectId}:
+   *   get:
+   *     tags:
+   *       - Projects
+   *     summary: Get project details
+   *     parameters:
+   *       - in: path
+   *         name: projectId
+   *         required: true
+   *         schema:
+   *           type: string
+   *     responses:
+   *       '200':
+   *         description: Project details
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Project'
+   *       '404':
+   *         description: Not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ErrorResponse'
+   */
   router.get('/:projectId', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;

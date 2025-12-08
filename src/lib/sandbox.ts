@@ -30,14 +30,14 @@ export async function spawnBash(command: string, opts: {
       shellArgs = ['-Command', command];
     } else {
       const fs = require('fs');
-      function isExecutable(file: string) {
+      const isExecutable = (file: string) => {
         try {
           fs.accessSync(file, fs.constants.X_OK);
           return fs.statSync(file).isFile();
         } catch {
           return false;
         }
-      }
+      };
       console.log(`[spawnBash] Detecting available shell...`);
       // Always prefer /bin/bash if available
       // Do NOT quote the entire command; let the shell parse it normally

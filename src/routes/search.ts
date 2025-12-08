@@ -6,6 +6,50 @@ import { searchInProject } from '../core/search';
 
 const router = Router({ mergeParams: true });
 
+/**
+ * @openapi
+ * /projects/{projectId}/search:
+ *   get:
+ *     tags:
+ *       - Search
+ *     summary: Search within project files
+ *     parameters:
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: path
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: query
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: regex
+ *         schema:
+ *           type: boolean
+ *       - in: query
+ *         name: case_sensitive
+ *         schema:
+ *           type: boolean
+ *       - in: query
+ *         name: max_results
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       '200':
+ *         description: Search results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/SearchResultEntry'
+ */
 const QuerySchema = z.object({
   path: z.string().default('/'),
   query: z.string().min(1),

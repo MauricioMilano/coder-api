@@ -9,6 +9,8 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { config } from './config';
 import { problemErrorHandler } from './lib/problem-handler';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './openapi/swagger';
 
 const server = express();
 
@@ -60,7 +62,6 @@ server.use('/projects/:projectId/pm2', require('./routes/pm2'));
 import { mcpServer } from './mcp-server';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
-import { randomUUID } from 'crypto';
 
 // Store MCP SSE transports by session ID
 const mcpSseTransports = new Map<string, SSEServerTransport>();
@@ -216,25 +217,24 @@ server.get('/capabilities', (req: Request, res: Response) => {
   });
 });
 
-// Serve openapi.json at /openapi
-server.get('/openapi*', async (request: Request, response: Response) => {
-  const openapiPath = join(__dirname, '../openapi.json');
-  const openapiRaw = readFileSync(openapiPath, 'utf-8');
-  let openapi;
+// Serve generated OpenAPI JSON from JSDoc at /openapi
+server.get('/openapi', async (request: Request, response: Response) => {
   try {
-    openapi = JSON.parse(openapiRaw);
+    // Clone the generated spec to avoid mutating the in-memory object
+    const openapi = JSON.parse(JSON.stringify(swaggerSpec));
+    const protocol = request.headers['x-forwarded-proto'] || request.protocol;
+    const host = request.headers['host'];
+    if (openapi.servers && openapi.servers.length > 0) {
+      openapi.servers[0].url = `${protocol}://${host}`;
+    }
+    response.setHeader('Content-Type', 'application/json').json(openapi);
   } catch (e) {
-    response.status(500).json({ error: 'Failed to parse OpenAPI spec' });
-    return;
+    response.status(500).json({ error: 'Failed to generate OpenAPI spec' });
   }
-  // Replace the servers[0].url with the current request host
-  const protocol = request.headers['x-forwarded-proto'] || request.protocol;
-  const host = request.headers['host'];
-  if (openapi.servers && openapi.servers.length > 0) {
-    openapi.servers[0].url = `${protocol}://${host}`;
-  }
-  response.setHeader('Content-Type', 'application/json').json(openapi);
 });
+
+// Swagger UI at /docs (uses dynamic /openapi endpoint)
+server.use('/docs', swaggerUi.serve, swaggerUi.setup(null, { swaggerOptions: { url: '/openapi' }, explorer: true }));
 
 // Error handler middleware (must be last)
 server.use(problemErrorHandler);
