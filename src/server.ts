@@ -13,6 +13,9 @@ import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './openapi/swagger';
 
 const server = express();
+// Trust proxy: only trust loopback requests to avoid permissive configuration
+// express-rate-limit rejects a permissive trustProxy (true). See docs for details.
+server.set('trust proxy', 'loopback');
 
 // Logger setup
 const logger = pino({ level: 'info' });
