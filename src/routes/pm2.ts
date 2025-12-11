@@ -325,7 +325,7 @@ const initRoutes = async () => {
       const project = JSON.parse(await fs.readFile(stateFile, 'utf-8'));
       
       const logLines = lines ? parseInt(lines, 10) : 100;
-      const result = await getPM2AppLogs(project, nameOrId, logLines);
+      const result = await getPM2AppLogs(nameOrId, logLines);
       return res.json(result);
     } catch (err: any) {
       return res.status(err.statusCode || 500).json({
