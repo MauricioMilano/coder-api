@@ -265,18 +265,13 @@ const initRoutes = async () => {
    */
   router.get('/status', async (req: Request, res: Response) => {
     try {
-      const { projectId } = req.params;
       const { nameOrId } = req.query as { nameOrId?: string };
       
       if (!nameOrId) {
         return res.status(400).json({ error: 'nameOrId parameter is required' });
       }
-      
-      const { config } = require('../config');
-      const stateFile = path.join(config.workspaceRoot, '.state', `${projectId}.json`);
-      const project = JSON.parse(await fs.readFile(stateFile, 'utf-8'));
-      
-      const result = await getPM2AppStatus(project, nameOrId);
+
+      const result = await getPM2AppStatus(nameOrId);
       return res.json(result);
     } catch (err: any) {
       return res.status(err.statusCode || 500).json({

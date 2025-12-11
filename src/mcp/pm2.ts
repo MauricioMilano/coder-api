@@ -232,7 +232,7 @@ export function registerPM2Tools(mcpServer: McpServer) {
         })).optional()
       }
     },
-    async ({ projectId }) => {
+    async () => {
       try {
         // projectId is no longer required for PM2 operations (PM2 is global), omit fetching project
         const result = await listPM2Apps();
@@ -329,7 +329,7 @@ export function registerPM2Tools(mcpServer: McpServer) {
         error: z.string().optional()
       }
     },
-    async ({ projectId }) => {
+    async () => {
       try {
         // projectId is no longer required for PM2 operations (PM2 is global), omit fetching project
         const result = await stopAllPM2Apps();
