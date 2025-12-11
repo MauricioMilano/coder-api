@@ -50,7 +50,7 @@ const router = Router();
  */
 
 const initRoutes = async () => {
-  const { createProject, renameProject, listProjects, getProject } = await import('../core/projects');
+  const { createProject, renameProject, listProjects, getProject, deleteProject } = await import('../core/projects');
 
   /**
    * @openapi
@@ -206,6 +206,49 @@ const initRoutes = async () => {
     } catch (err: any) {
       return res.status(err.statusCode || 500).json({
         error: err.message || 'Error fetching project',
+        details: err.details,
+      });
+    }
+  });
+
+  /**
+   * @openapi
+   * /projects/{projectId}:
+   *   delete:
+   *     tags:
+   *       - Projects
+   *     summary: Delete a project
+   *     parameters:
+   *       - in: path
+   *         name: projectId
+   *         required: true
+   *         schema:
+   *           type: string
+   *     responses:
+   *       '200':
+   *         description: Project deleted
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 project_id:
+   *                   type: string
+   *       '404':
+   *         description: Not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ErrorResponse'
+   */
+  router.delete('/:projectId', async (req: Request, res: Response) => {
+    try {
+      const { projectId } = req.params;
+      const result = await deleteProject(projectId);
+      return res.json(result);
+    } catch (err: any) {
+      return res.status(err.statusCode || 500).json({
+        error: err.message || 'Error deleting project',
         details: err.details,
       });
     }

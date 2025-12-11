@@ -4,7 +4,8 @@ import {
   createProject, 
   renameProject, 
   listProjects, 
-  getProject 
+  getProject,
+  deleteProject
 } from '../core/projects';
 
 export function registerProjectTools(mcpServer: McpServer) {
@@ -133,6 +134,35 @@ export function registerProjectTools(mcpServer: McpServer) {
         return {
           content: [{ type: 'text', text: JSON.stringify(project, null, 2) }],
           structuredContent: project
+        };
+      } catch (error: any) {
+        return {
+          content: [{ type: 'text', text: `Error: ${error.message || JSON.stringify(error)}` }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  // Delete Project
+  mcpServer.registerTool(
+    'delete-project',
+    {
+      title: 'Delete Project',
+      description: 'Delete an existing project and remove its files and metadata',
+      inputSchema: {
+        projectId: z.string()
+      },
+      outputSchema: {
+        project_id: z.string()
+      }
+    },
+    async ({ projectId }) => {
+      try {
+        const result = await deleteProject(projectId);
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result) }],
+          structuredContent: result
         };
       } catch (error: any) {
         return {

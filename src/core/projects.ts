@@ -142,3 +142,31 @@ export async function getProject(projectId: string): Promise<Project> {
     throw { statusCode: 404, message: 'Project not found' };
   }
 }
+
+export async function deleteProject(projectId: string) {
+  const metaPath = path.join(projectStateDir, `${projectId}.json`);
+  let project: Project;
+  try {
+    const data = await fs.readFile(metaPath, 'utf-8');
+    project = JSON.parse(data);
+  } catch {
+    throw { statusCode: 404, message: 'Project not found' };
+  }
+
+  const projectsRoot = path.join(config.workspaceRoot, 'projects');
+  if (project.rootAbsPath && project.rootAbsPath.startsWith(projectsRoot + path.sep)) {
+    try {
+      await fs.rm(project.rootAbsPath, { recursive: true, force: true });
+    } catch (e) {
+      throw { statusCode: 500, message: 'Failed to remove project folder', details: (e as any).message };
+    }
+  }
+
+  try {
+    await fs.rm(metaPath);
+  } catch (e) {
+    // ignore
+  }
+
+  return { project_id: projectId };
+}
