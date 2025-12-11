@@ -1,6 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getProject } from '../core/projects';
 import { 
   startPM2App,
   stopPM2App,
@@ -50,7 +49,7 @@ export function registerPM2Tools(mcpServer: McpServer) {
       title: 'Start PM2 Application',
       description: 'Start an application using PM2 process manager with advanced configuration options',
       inputSchema: {
-        projectId: z.string(),
+        // projectId removed: PM2 operations are global
         name: z.string().describe('Application name for PM2'),
         script: z.string().describe('Path to the script to run (relative to project root)'),
         cwd: z.string().optional().describe('Working directory (relative to project root)'),
@@ -74,7 +73,7 @@ export function registerPM2Tools(mcpServer: McpServer) {
     },
     async ({ projectId, name, script, cwd, args, env, instances, watch, ignore_watch, max_memory_restart, log_file, out_file, error_file, merge_logs, time }) => {
       try {
-        const project = await getProject(projectId);
+        // projectId is no longer required for PM2 operations (PM2 is global), omit fetching project
         const options: PM2StartOptions = {
           name,
           script,
@@ -92,7 +91,7 @@ export function registerPM2Tools(mcpServer: McpServer) {
           time
         };
         
-        const result = await startPM2App(project, options);
+        const result = await startPM2App(options);
         return {
           content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
           structuredContent: result
@@ -113,7 +112,7 @@ export function registerPM2Tools(mcpServer: McpServer) {
       title: 'Stop PM2 Application',
       description: 'Stop a running PM2 application by name or ID',
       inputSchema: {
-        projectId: z.string(),
+        // projectId removed: PM2 operations are global
         nameOrId: z.string().describe('Application name or PM2 process ID')
       },
       outputSchema: {
@@ -124,8 +123,8 @@ export function registerPM2Tools(mcpServer: McpServer) {
     },
     async ({ projectId, nameOrId }) => {
       try {
-        const project = await getProject(projectId);
-        const result = await stopPM2App(project, nameOrId);
+        // projectId is no longer required for PM2 operations (PM2 is global), omit fetching project
+        const result = await stopPM2App(nameOrId);
         return {
           content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
           structuredContent: result
@@ -146,7 +145,7 @@ export function registerPM2Tools(mcpServer: McpServer) {
       title: 'Restart PM2 Application',
       description: 'Restart a PM2 application by name or ID',
       inputSchema: {
-        projectId: z.string(),
+        // projectId removed: PM2 operations are global
         nameOrId: z.string().describe('Application name or PM2 process ID')
       },
       outputSchema: {
@@ -157,8 +156,8 @@ export function registerPM2Tools(mcpServer: McpServer) {
     },
     async ({ projectId, nameOrId }) => {
       try {
-        const project = await getProject(projectId);
-        const result = await restartPM2App(project, nameOrId);
+        // projectId is no longer required for PM2 operations (PM2 is global), omit fetching project
+        const result = await restartPM2App(nameOrId);
         return {
           content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
           structuredContent: result
@@ -179,7 +178,7 @@ export function registerPM2Tools(mcpServer: McpServer) {
       title: 'Delete PM2 Application',
       description: 'Delete a PM2 application by name or ID (stops and removes from PM2)',
       inputSchema: {
-        projectId: z.string(),
+        // projectId removed: PM2 operations are global
         nameOrId: z.string().describe('Application name or PM2 process ID')
       },
       outputSchema: {
@@ -190,8 +189,8 @@ export function registerPM2Tools(mcpServer: McpServer) {
     },
     async ({ projectId, nameOrId }) => {
       try {
-        const project = await getProject(projectId);
-        const result = await deletePM2App(project, nameOrId);
+        // projectId is no longer required for PM2 operations (PM2 is global), omit fetching project
+        const result = await deletePM2App(nameOrId);
         return {
           content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
           structuredContent: result
@@ -211,9 +210,7 @@ export function registerPM2Tools(mcpServer: McpServer) {
     {
       title: 'List PM2 Applications',
       description: 'List all PM2 applications with their status and information',
-      inputSchema: {
-        projectId: z.string()
-      },
+      inputSchema: {},
       outputSchema: {
         success: z.boolean(),
         output: z.string(),
@@ -237,8 +234,8 @@ export function registerPM2Tools(mcpServer: McpServer) {
     },
     async ({ projectId }) => {
       try {
-        const project = await getProject(projectId);
-        const result = await listPM2Apps(project);
+        // projectId is no longer required for PM2 operations (PM2 is global), omit fetching project
+        const result = await listPM2Apps();
         return {
           content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
           structuredContent: result
@@ -259,7 +256,7 @@ export function registerPM2Tools(mcpServer: McpServer) {
       title: 'Get PM2 Application Status',
       description: 'Get detailed status information for a specific PM2 application',
       inputSchema: {
-        projectId: z.string(),
+        // projectId removed: PM2 operations are global
         nameOrId: z.string().describe('Application name or PM2 process ID')
       },
       outputSchema: {
@@ -270,8 +267,8 @@ export function registerPM2Tools(mcpServer: McpServer) {
     },
     async ({ projectId, nameOrId }) => {
       try {
-        const project = await getProject(projectId);
-        const result = await getPM2AppStatus(project, nameOrId);
+        // projectId is no longer required for PM2 operations (PM2 is global), omit fetching project
+        const result = await getPM2AppStatus(nameOrId);
         return {
           content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
           structuredContent: result
@@ -292,7 +289,7 @@ export function registerPM2Tools(mcpServer: McpServer) {
       title: 'Get PM2 Application Logs',
       description: 'Get recent logs from a PM2 application',
       inputSchema: {
-        projectId: z.string(),
+        // projectId removed: PM2 operations are global
         nameOrId: z.string().describe('Application name or PM2 process ID'),
         lines: z.number().default(100).describe('Number of recent log lines to retrieve')
       },
@@ -304,8 +301,8 @@ export function registerPM2Tools(mcpServer: McpServer) {
     },
     async ({ projectId, nameOrId, lines }) => {
       try {
-        const project = await getProject(projectId);
-        const result = await getPM2AppLogs(project, nameOrId, lines);
+        // projectId is no longer required for PM2 operations (PM2 is global), omit fetching project
+        const result = await getPM2AppLogs(nameOrId, lines);
         return {
           content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
           structuredContent: result
@@ -325,9 +322,7 @@ export function registerPM2Tools(mcpServer: McpServer) {
     {
       title: 'Stop All PM2 Applications',
       description: 'Stop and kill all PM2 applications (PM2 daemon shutdown)',
-      inputSchema: {
-        projectId: z.string()
-      },
+      inputSchema: {},
       outputSchema: {
         success: z.boolean(),
         output: z.string(),
@@ -336,8 +331,8 @@ export function registerPM2Tools(mcpServer: McpServer) {
     },
     async ({ projectId }) => {
       try {
-        const project = await getProject(projectId);
-        const result = await stopAllPM2Apps(project);
+        // projectId is no longer required for PM2 operations (PM2 is global), omit fetching project
+        const result = await stopAllPM2Apps();
         return {
           content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
           structuredContent: result

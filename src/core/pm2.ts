@@ -1,6 +1,5 @@
-import { spawn, exec } from 'child_process';
+import { exec } from 'child_process';
 import { promisify } from 'util';
-import { Project } from '../types/common';
 import path from 'path';
 
 const execAsync = promisify(exec);
@@ -13,9 +12,9 @@ export async function checkPM2Installation(): Promise<{ installed: boolean; erro
     await execAsync('pm2 --version');
     return { installed: true };
   } catch (error: any) {
-    return { 
-      installed: false, 
-      error: 'PM2 is not installed. Please install PM2 globally: npm install -g pm2' 
+    return {
+      installed: false,
+      error: 'PM2 is not installed. Please install PM2 globally: npm install -g pm2'
     };
   }
 }
@@ -37,9 +36,9 @@ export interface PM2ProcessInfo {
 }
 
 export interface PM2StartOptions {
-  name: string;
+  name?: string;
   script: string;
-  cwd?: string;
+  cwd?: string; // working directory relative to current process if provided
   args?: string[];
   env?: Record<string, string>;
   instances?: number;
@@ -61,11 +60,14 @@ export interface PM2CommandResult {
   processes?: PM2ProcessInfo[];
 }
 
+function resolveCwd(cwd?: string) {
+  return cwd ? path.resolve(process.cwd(), cwd) : process.cwd();
+}
+
 /**
  * Start an application with PM2
  */
-export async function startPM2App(project: Project, options: PM2StartOptions): Promise<PM2CommandResult> {
-  // Check PM2 installation first
+export async function startPM2App(options: PM2StartOptions): Promise<PM2CommandResult> {
   const pm2Check = await checkPM2Installation();
   if (!pm2Check.installed) {
     return {
@@ -74,61 +76,57 @@ export async function startPM2App(project: Project, options: PM2StartOptions): P
       error: pm2Check.error
     };
   }
-  
+
   try {
-    const cwd = options.cwd ? path.resolve(project.rootAbsPath, options.cwd) : project.rootAbsPath;
-    
-    // Build PM2 start command
-    const args = ['start', options.script];
-    
+    const cwd = resolveCwd(options.cwd);
+    const args: string[] = ['start', options.script];
+
     if (options.name) {
       args.push('--name', options.name);
     }
-    
+
     if (options.instances) {
       args.push('--instances', options.instances.toString());
     }
-    
+
     if (options.watch) {
       args.push('--watch');
       if (options.ignore_watch && options.ignore_watch.length > 0) {
         args.push('--ignore-watch', options.ignore_watch.join(','));
       }
     }
-    
+
     if (options.max_memory_restart) {
       args.push('--max-memory-restart', options.max_memory_restart);
     }
-    
+
     if (options.log_file) {
       args.push('--log', path.resolve(cwd, options.log_file));
     }
-    
+
     if (options.out_file) {
       args.push('--output', path.resolve(cwd, options.out_file));
     }
-    
+
     if (options.error_file) {
       args.push('--error', path.resolve(cwd, options.error_file));
     }
-    
+
     if (options.merge_logs) {
       args.push('--merge-logs');
     }
-    
+
     if (options.time) {
       args.push('--time');
     }
-    
+
     if (options.args && options.args.length > 0) {
       args.push('--', ...options.args);
     }
-    
-    // Set environment variables
+
     const env = { ...process.env, ...options.env };
-    
     const { stdout, stderr } = await execAsync(`pm2 ${args.join(' ')}`, { cwd, env });
-    
+
     return {
       success: true,
       output: stdout,
@@ -146,10 +144,10 @@ export async function startPM2App(project: Project, options: PM2StartOptions): P
 /**
  * Stop PM2 application(s)
  */
-export async function stopPM2App(project: Project, nameOrId: string): Promise<PM2CommandResult> {
+export async function stopPM2App(nameOrId: string, cwd?: string): Promise<PM2CommandResult> {
   try {
-    const { stdout, stderr } = await execAsync(`pm2 stop ${nameOrId}`, { cwd: project.rootAbsPath });
-    
+    const cwdUsed = resolveCwd(cwd);
+    const { stdout, stderr } = await execAsync(`pm2 stop ${nameOrId}`, { cwd: cwdUsed });
     return {
       success: true,
       output: stdout,
@@ -167,10 +165,10 @@ export async function stopPM2App(project: Project, nameOrId: string): Promise<PM
 /**
  * Restart PM2 application(s)
  */
-export async function restartPM2App(project: Project, nameOrId: string): Promise<PM2CommandResult> {
+export async function restartPM2App(nameOrId: string, cwd?: string): Promise<PM2CommandResult> {
   try {
-    const { stdout, stderr } = await execAsync(`pm2 restart ${nameOrId}`, { cwd: project.rootAbsPath });
-    
+    const cwdUsed = resolveCwd(cwd);
+    const { stdout, stderr } = await execAsync(`pm2 restart ${nameOrId}`, { cwd: cwdUsed });
     return {
       success: true,
       output: stdout,
@@ -188,10 +186,10 @@ export async function restartPM2App(project: Project, nameOrId: string): Promise
 /**
  * Delete PM2 application(s)
  */
-export async function deletePM2App(project: Project, nameOrId: string): Promise<PM2CommandResult> {
+export async function deletePM2App(nameOrId: string, cwd?: string): Promise<PM2CommandResult> {
   try {
-    const { stdout, stderr } = await execAsync(`pm2 delete ${nameOrId}`, { cwd: project.rootAbsPath });
-    
+    const cwdUsed = resolveCwd(cwd);
+    const { stdout, stderr } = await execAsync(`pm2 delete ${nameOrId}`, { cwd: cwdUsed });
     return {
       success: true,
       output: stdout,
@@ -209,8 +207,7 @@ export async function deletePM2App(project: Project, nameOrId: string): Promise<
 /**
  * List PM2 applications
  */
-export async function listPM2Apps(project: Project): Promise<PM2CommandResult> {
-  // Check PM2 installation first
+export async function listPM2Apps(cwd?: string): Promise<PM2CommandResult> {
   const pm2Check = await checkPM2Installation();
   if (!pm2Check.installed) {
     return {
@@ -219,17 +216,16 @@ export async function listPM2Apps(project: Project): Promise<PM2CommandResult> {
       error: pm2Check.error
     };
   }
-  
+
   try {
-    const { stdout, stderr } = await execAsync('pm2 jlist', { cwd: project.rootAbsPath });
-    
+    const cwdUsed = resolveCwd(cwd);
+    const { stdout, stderr } = await execAsync('pm2 jlist', { cwd: cwdUsed });
     let processes: PM2ProcessInfo[] = [];
     try {
       processes = JSON.parse(stdout);
     } catch (parseError) {
-      // If JSON parsing fails, return raw output
+      // Return raw output if parsing failed
     }
-    
     return {
       success: true,
       output: stdout,
@@ -248,10 +244,10 @@ export async function listPM2Apps(project: Project): Promise<PM2CommandResult> {
 /**
  * Get PM2 application status
  */
-export async function getPM2AppStatus(project: Project, nameOrId: string): Promise<PM2CommandResult> {
+export async function getPM2AppStatus(nameOrId: string, cwd?: string): Promise<PM2CommandResult> {
   try {
-    const { stdout, stderr } = await execAsync(`pm2 show ${nameOrId}`, { cwd: project.rootAbsPath });
-    
+    const cwdUsed = resolveCwd(cwd);
+    const { stdout, stderr } = await execAsync(`pm2 show ${nameOrId}`, { cwd: cwdUsed });
     return {
       success: true,
       output: stdout,
@@ -269,12 +265,12 @@ export async function getPM2AppStatus(project: Project, nameOrId: string): Promi
 /**
  * Get PM2 application logs
  */
-export async function getPM2AppLogs(project: Project, nameOrId: string, lines: number = 100): Promise<PM2CommandResult> {
+export async function getPM2AppLogs(nameOrId: string, lines: number = 100, cwd?: string): Promise<PM2CommandResult> {
   try {
-    const { stdout, stderr } = await execAsync(`pm2 logs ${nameOrId} --lines ${lines} --nostream`, { 
-      cwd: project.rootAbsPath 
+    const cwdUsed = resolveCwd(cwd);
+    const { stdout, stderr } = await execAsync(`pm2 logs ${nameOrId} --lines ${lines} --nostream`, {
+      cwd: cwdUsed
     });
-    
     return {
       success: true,
       output: stdout,
@@ -292,10 +288,9 @@ export async function getPM2AppLogs(project: Project, nameOrId: string, lines: n
 /**
  * Stop and delete all PM2 applications
  */
-export async function stopAllPM2Apps(project: Project): Promise<PM2CommandResult> {
+export async function stopAllPM2Apps(): Promise<PM2CommandResult> {
   try {
-    const { stdout, stderr } = await execAsync('pm2 kill', { cwd: project.rootAbsPath });
-    
+    const { stdout, stderr } = await execAsync('pm2 kill');
     return {
       success: true,
       output: stdout,

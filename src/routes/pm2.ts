@@ -44,11 +44,8 @@ const initRoutes = async () => {
    */
   router.post('/start', async (req: Request, res: Response) => {
     try {
-      const { projectId } = req.params;
-      const { config } = require('../config');
-      const stateFile = path.join(config.workspaceRoot, '.state', `${projectId}.json`);
-      const project = JSON.parse(await fs.readFile(stateFile, 'utf-8'));
-      
+      // projectId is ignored for PM2 operations (PM2 is global), keep path param for compatibility if needed;
+      // projectId is ignored for PM2 operations (PM2 is global)
       const options = {
         name: req.body.name,
         script: req.body.script,
@@ -66,7 +63,7 @@ const initRoutes = async () => {
         time: req.body.time || false
       };
       
-      const result = await startPM2App(project, options);
+      const result = await startPM2App(options);
       return res.json(result);
     } catch (err: any) {
       return res.status(err.statusCode || 500).json({
@@ -103,12 +100,8 @@ const initRoutes = async () => {
    */
   router.post('/stop', async (req: Request, res: Response) => {
     try {
-      const { projectId } = req.params;
-      const { config } = require('../config');
-      const stateFile = path.join(config.workspaceRoot, '.state', `${projectId}.json`);
-      const project = JSON.parse(await fs.readFile(stateFile, 'utf-8'));
-      
-      const result = await stopPM2App(project, req.body.nameOrId);
+      // projectId is ignored for PM2 operations (PM2 is global)
+      const result = await stopPM2App(req.body.nameOrId);
       return res.json(result);
     } catch (err: any) {
       return res.status(err.statusCode || 500).json({
@@ -145,12 +138,8 @@ const initRoutes = async () => {
    */
   router.post('/restart', async (req: Request, res: Response) => {
     try {
-      const { projectId } = req.params;
-      const { config } = require('../config');
-      const stateFile = path.join(config.workspaceRoot, '.state', `${projectId}.json`);
-      const project = JSON.parse(await fs.readFile(stateFile, 'utf-8'));
-      
-      const result = await restartPM2App(project, req.body.nameOrId);
+      // projectId is ignored for PM2 operations (PM2 is global)
+      const result = await restartPM2App(req.body.nameOrId);
       return res.json(result);
     } catch (err: any) {
       return res.status(err.statusCode || 500).json({
@@ -187,12 +176,8 @@ const initRoutes = async () => {
    */
   router.delete('/', async (req: Request, res: Response) => {
     try {
-      const { projectId } = req.params;
-      const { config } = require('../config');
-      const stateFile = path.join(config.workspaceRoot, '.state', `${projectId}.json`);
-      const project = JSON.parse(await fs.readFile(stateFile, 'utf-8'));
-      
-      const result = await deletePM2App(project, req.body.nameOrId);
+      // projectId is ignored for PM2 operations (PM2 is global)
+      const result = await deletePM2App(req.body.nameOrId);
       return res.json(result);
     } catch (err: any) {
       return res.status(err.statusCode || 500).json({
@@ -245,12 +230,8 @@ const initRoutes = async () => {
    */
   router.get('/list', async (req: Request, res: Response) => {
     try {
-      const { projectId } = req.params;
-      const { config } = require('../config');
-      const stateFile = path.join(config.workspaceRoot, '.state', `${projectId}.json`);
-      const project = JSON.parse(await fs.readFile(stateFile, 'utf-8'));
-      
-      const result = await listPM2Apps(project);
+      // projectId is ignored for PM2 operations (PM2 is global)
+      const result = await listPM2Apps();
       return res.json(result);
     } catch (err: any) {
       return res.status(err.statusCode || 500).json({
@@ -373,12 +354,8 @@ const initRoutes = async () => {
    */
   router.post('/kill-all', async (req: Request, res: Response) => {
     try {
-      const { projectId } = req.params;
-      const { config } = require('../config');
-      const stateFile = path.join(config.workspaceRoot, '.state', `${projectId}.json`);
-      const project = JSON.parse(await fs.readFile(stateFile, 'utf-8'));
-      
-      const result = await stopAllPM2Apps(project);
+      // projectId is ignored for PM2 operations (PM2 is global)
+      const result = await stopAllPM2Apps();
       return res.json(result);
     } catch (err: any) {
       return res.status(err.statusCode || 500).json({
