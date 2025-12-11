@@ -71,7 +71,7 @@ export function registerPM2Tools(mcpServer: McpServer) {
         error: z.string().optional()
       }
     },
-    async ({ projectId, name, script, cwd, args, env, instances, watch, ignore_watch, max_memory_restart, log_file, out_file, error_file, merge_logs, time }) => {
+    async ({  name, script, cwd, args, env, instances, watch, ignore_watch, max_memory_restart, log_file, out_file, error_file, merge_logs, time }) => {
       try {
         // projectId is no longer required for PM2 operations (PM2 is global), omit fetching project
         const options: PM2StartOptions = {
@@ -121,7 +121,7 @@ export function registerPM2Tools(mcpServer: McpServer) {
         error: z.string().optional()
       }
     },
-    async ({ projectId, nameOrId }) => {
+    async ({  nameOrId }) => {
       try {
         // projectId is no longer required for PM2 operations (PM2 is global), omit fetching project
         const result = await stopPM2App(nameOrId);
@@ -154,7 +154,7 @@ export function registerPM2Tools(mcpServer: McpServer) {
         error: z.string().optional()
       }
     },
-    async ({ projectId, nameOrId }) => {
+    async ({  nameOrId }) => {
       try {
         // projectId is no longer required for PM2 operations (PM2 is global), omit fetching project
         const result = await restartPM2App(nameOrId);
@@ -187,7 +187,7 @@ export function registerPM2Tools(mcpServer: McpServer) {
         error: z.string().optional()
       }
     },
-    async ({ projectId, nameOrId }) => {
+    async ({  nameOrId }) => {
       try {
         // projectId is no longer required for PM2 operations (PM2 is global), omit fetching project
         const result = await deletePM2App(nameOrId);
@@ -265,7 +265,7 @@ export function registerPM2Tools(mcpServer: McpServer) {
         error: z.string().optional()
       }
     },
-    async ({ projectId, nameOrId }) => {
+    async ({  nameOrId }) => {
       try {
         // projectId is no longer required for PM2 operations (PM2 is global), omit fetching project
         const result = await getPM2AppStatus(nameOrId);
@@ -299,7 +299,7 @@ export function registerPM2Tools(mcpServer: McpServer) {
         error: z.string().optional()
       }
     },
-    async ({ projectId, nameOrId, lines }) => {
+    async ({  nameOrId, lines }) => {
       try {
         // projectId is no longer required for PM2 operations (PM2 is global), omit fetching project
         const result = await getPM2AppLogs(nameOrId, lines);
