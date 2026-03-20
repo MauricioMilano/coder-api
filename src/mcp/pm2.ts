@@ -13,6 +13,16 @@ import {
   PM2StartOptions
 } from '../core/pm2';
 
+async function mcpLogContext(tag: string) {
+  try {
+    const pm2Check = await checkPM2Installation();
+    console.log(`[MCP-PM2] ${tag} pm2Check: ${JSON.stringify(pm2Check)}`);
+  } catch (err) {
+    console.log(`[MCP-PM2] ${tag} checkPM2Installation failed: ${String(err)}`);
+  }
+  console.log(`[MCP-PM2] ${tag} ENV PATH=${process.env.PATH}, CWD=${process.cwd()}`);
+}
+
 export function registerPM2Tools(mcpServer: McpServer) {
   // PM2 Health Check
   mcpServer.registerTool(
@@ -72,6 +82,7 @@ export function registerPM2Tools(mcpServer: McpServer) {
       }
     },
     async ({  name, script, cwd, args, env, instances, watch, ignore_watch, max_memory_restart, log_file, out_file, error_file, merge_logs, time }) => {
+        await mcpLogContext('pm2-start');
       try {
         // projectId is no longer required for PM2 operations (PM2 is global), omit fetching project
         const options: PM2StartOptions = {
@@ -236,6 +247,14 @@ export function registerPM2Tools(mcpServer: McpServer) {
       try {
         // projectId is no longer required for PM2 operations (PM2 is global), omit fetching project
         const result = await listPM2Apps();
+        // Attach diagnostic info when returning via MCP so client can see the pm2 binary/path used
+        if (result && !result.success) {
+          return {
+            content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+            structuredContent: result,
+            isError: true
+          };
+        }
         return {
           content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
           structuredContent: result

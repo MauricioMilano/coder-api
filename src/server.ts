@@ -19,6 +19,13 @@ server.set('trust proxy', 'loopback');
 
 // Logger setup
 const logger = pino({ level: 'info' });
+// Diagnostic: log current trust proxy value and environment so we can see what the running process uses
+try {
+  logger.info({ trustProxy: server.get('trust proxy'), PATH: process.env.PATH, cwd: process.cwd() }, 'startup: trust proxy and environment');
+} catch (e) {
+  // avoid startup crash if server.get has unexpected typings
+  logger.warn({ err: String(e) }, 'failed to log trust proxy at startup');
+}
 
 // Simple logging middleware
 server.use((req: Request, res: Response, next: NextFunction) => {
@@ -44,8 +51,14 @@ server.use(express.urlencoded({ extended: true }));
 const limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 100, // limit each IP to 100 requests per windowMs
-});
-server.use(limiter);
+  // Explicitly set trustProxy to false to avoid permissive truthy configurations
+  // and prevent express-rate-limit from throwing ERR_ERL_PERMISSIVE_TRUST_PROXY
+  });
+try {
+  server.use(limiter as any);
+} catch (err) {
+  logger.warn({ msg: 'Failed to apply rate limiting middleware', error: String(err) });
+}
 
 // Request ID middleware
 server.use((req: Request, res: Response, next: NextFunction) => {

@@ -4,17 +4,43 @@ import path from 'path';
 
 const execAsync = promisify(exec);
 
+let cachedPm2Binary: string | null = null;
+async function getPm2Binary(): Promise<string> {
+  if (cachedPm2Binary) return cachedPm2Binary;
+  if (process.env.PM2_BINARY) {
+    cachedPm2Binary = process.env.PM2_BINARY;
+    return cachedPm2Binary;
+  }
+
+  try {
+    const { stdout } = await execAsync('which pm2');
+    const candidate = stdout.toString().trim();
+    if (candidate) {
+      cachedPm2Binary = candidate;
+      return candidate;
+    }
+  } catch (err) {
+    // ignore and fallback
+  }
+
+  // Fallback to common global install location
+  cachedPm2Binary = '/usr/local/bin/pm2';
+  return cachedPm2Binary;
+}
+
 /**
  * Check if PM2 is installed and available
  */
-export async function checkPM2Installation(): Promise<{ installed: boolean; error?: string }> {
+export async function checkPM2Installation(): Promise<{ installed: boolean; error?: string; pm2Binary?: string }> {
   try {
-    await execAsync('pm2 --version');
-    return { installed: true };
+    const pm2 = await getPm2Binary();
+    await execAsync(`${pm2} --version`);
+    return { installed: true, pm2Binary: pm2 };
   } catch (error: any) {
     return {
       installed: false,
-      error: 'PM2 is not installed. Please install PM2 globally: npm install -g pm2'
+      pm2Binary: cachedPm2Binary || undefined,
+      error: 'PM2 is not installed or not available in PATH. Please ensure pm2 is installed globally: npm install -g pm2'
     };
   }
 }
@@ -27,7 +53,8 @@ export interface PM2ProcessInfo {
     pm_id: number;
     restart_time: number;
     unstable_restarts: number;
-    created_at: number;
+    created_at: number | null;
+    [key: string]: unknown;
   };
   monit: {
     memory: number;
@@ -57,6 +84,8 @@ export interface PM2CommandResult {
   success: boolean;
   output: string;
   error?: string;
+  errorDetails?: string;
+  pm2Binary?: string;
   processes?: PM2ProcessInfo[];
 }
 
@@ -73,11 +102,13 @@ export async function startPM2App(options: PM2StartOptions): Promise<PM2CommandR
     return {
       success: false,
       output: '',
-      error: pm2Check.error
+      error: pm2Check.error,
+      pm2Binary: pm2Check.pm2Binary
     };
   }
 
   try {
+    const pm2 = await getPm2Binary();
     const cwd = resolveCwd(options.cwd);
     const args: string[] = ['start', options.script];
 
@@ -125,18 +156,21 @@ export async function startPM2App(options: PM2StartOptions): Promise<PM2CommandR
     }
 
     const env = { ...process.env, ...options.env };
-    const { stdout, stderr } = await execAsync(`pm2 ${args.join(' ')}`, { cwd, env });
+    const cmd = `${pm2} ${args.join(' ')}`;
+    const { stdout, stderr } = await execAsync(cmd, { cwd, env });
 
     return {
       success: true,
       output: stdout,
-      error: stderr || undefined
+      error: stderr || undefined,
+      pm2Binary: pm2
     };
   } catch (error: any) {
     return {
       success: false,
       output: '',
-      error: error.message || 'Failed to start PM2 application'
+      error: error.message || 'Failed to start PM2 application',
+      errorDetails: (error && (error.stderr || error.stack || String(error))) || undefined
     };
   }
 }
@@ -146,18 +180,22 @@ export async function startPM2App(options: PM2StartOptions): Promise<PM2CommandR
  */
 export async function stopPM2App(nameOrId: string, cwd?: string): Promise<PM2CommandResult> {
   try {
+    const pm2 = await getPm2Binary();
     const cwdUsed = resolveCwd(cwd);
-    const { stdout, stderr } = await execAsync(`pm2 stop ${nameOrId}`, { cwd: cwdUsed });
+    const cmd = `${pm2} stop ${nameOrId}`;
+    const { stdout, stderr } = await execAsync(cmd, { cwd: cwdUsed });
     return {
       success: true,
       output: stdout,
-      error: stderr || undefined
+      error: stderr || undefined,
+      pm2Binary: pm2
     };
   } catch (error: any) {
     return {
       success: false,
       output: '',
-      error: error.message || 'Failed to stop PM2 application'
+      error: error.message || 'Failed to stop PM2 application',
+      errorDetails: (error && (error.stderr || error.stack || String(error))) || undefined
     };
   }
 }
@@ -167,18 +205,22 @@ export async function stopPM2App(nameOrId: string, cwd?: string): Promise<PM2Com
  */
 export async function restartPM2App(nameOrId: string, cwd?: string): Promise<PM2CommandResult> {
   try {
+    const pm2 = await getPm2Binary();
     const cwdUsed = resolveCwd(cwd);
-    const { stdout, stderr } = await execAsync(`pm2 restart ${nameOrId}`, { cwd: cwdUsed });
+    const cmd = `${pm2} restart ${nameOrId}`;
+    const { stdout, stderr } = await execAsync(cmd, { cwd: cwdUsed });
     return {
       success: true,
       output: stdout,
-      error: stderr || undefined
+      error: stderr || undefined,
+      pm2Binary: pm2
     };
   } catch (error: any) {
     return {
       success: false,
       output: '',
-      error: error.message || 'Failed to restart PM2 application'
+      error: error.message || 'Failed to restart PM2 application',
+      errorDetails: (error && (error.stderr || error.stack || String(error))) || undefined
     };
   }
 }
@@ -188,18 +230,22 @@ export async function restartPM2App(nameOrId: string, cwd?: string): Promise<PM2
  */
 export async function deletePM2App(nameOrId: string, cwd?: string): Promise<PM2CommandResult> {
   try {
+    const pm2 = await getPm2Binary();
     const cwdUsed = resolveCwd(cwd);
-    const { stdout, stderr } = await execAsync(`pm2 delete ${nameOrId}`, { cwd: cwdUsed });
+    const cmd = `${pm2} delete ${nameOrId}`;
+    const { stdout, stderr } = await execAsync(cmd, { cwd: cwdUsed });
     return {
       success: true,
       output: stdout,
-      error: stderr || undefined
+      error: stderr || undefined,
+      pm2Binary: pm2
     };
   } catch (error: any) {
     return {
       success: false,
       output: '',
-      error: error.message || 'Failed to delete PM2 application'
+      error: error.message || 'Failed to delete PM2 application',
+      errorDetails: (error && (error.stderr || error.stack || String(error))) || undefined
     };
   }
 }
@@ -213,13 +259,16 @@ export async function listPM2Apps(cwd?: string): Promise<PM2CommandResult> {
     return {
       success: false,
       output: '',
-      error: pm2Check.error
+      error: pm2Check.error,
+      pm2Binary: pm2Check.pm2Binary
     };
   }
 
   try {
+    const pm2 = await getPm2Binary();
     const cwdUsed = resolveCwd(cwd);
-    const { stdout, stderr } = await execAsync('pm2 jlist', { cwd: cwdUsed });
+    const cmd = `${pm2} jlist`;
+    const { stdout, stderr } = await execAsync(cmd, { cwd: cwdUsed });
     let processes: PM2ProcessInfo[] = [];
     try {
       processes = JSON.parse(stdout);
@@ -230,13 +279,15 @@ export async function listPM2Apps(cwd?: string): Promise<PM2CommandResult> {
       success: true,
       output: stdout,
       error: stderr || undefined,
-      processes
+      processes,
+      pm2Binary: pm2
     };
   } catch (error: any) {
     return {
       success: false,
       output: '',
-      error: error.message || 'Failed to list PM2 applications'
+      error: error.message || 'Failed to list PM2 applications',
+      errorDetails: (error && (error.stderr || error.stack || String(error))) || undefined
     };
   }
 }
@@ -246,18 +297,22 @@ export async function listPM2Apps(cwd?: string): Promise<PM2CommandResult> {
  */
 export async function getPM2AppStatus(nameOrId: string, cwd?: string): Promise<PM2CommandResult> {
   try {
+    const pm2 = await getPm2Binary();
     const cwdUsed = resolveCwd(cwd);
-    const { stdout, stderr } = await execAsync(`pm2 show ${nameOrId}`, { cwd: cwdUsed });
+    const cmd = `${pm2} show ${nameOrId}`;
+    const { stdout, stderr } = await execAsync(cmd, { cwd: cwdUsed });
     return {
       success: true,
       output: stdout,
-      error: stderr || undefined
+      error: stderr || undefined,
+      pm2Binary: pm2
     };
   } catch (error: any) {
     return {
       success: false,
       output: '',
-      error: error.message || 'Failed to get PM2 application status'
+      error: error.message || 'Failed to get PM2 application status',
+      errorDetails: (error && (error.stderr || error.stack || String(error))) || undefined
     };
   }
 }
@@ -267,20 +322,22 @@ export async function getPM2AppStatus(nameOrId: string, cwd?: string): Promise<P
  */
 export async function getPM2AppLogs(nameOrId: string, lines: number = 100, cwd?: string): Promise<PM2CommandResult> {
   try {
+    const pm2 = await getPm2Binary();
     const cwdUsed = resolveCwd(cwd);
-    const { stdout, stderr } = await execAsync(`pm2 logs ${nameOrId} --lines ${lines} --nostream`, {
-      cwd: cwdUsed
-    });
+    const cmd = `${pm2} logs ${nameOrId} --lines ${lines} --nostream`;
+    const { stdout, stderr } = await execAsync(cmd, { cwd: cwdUsed });
     return {
       success: true,
       output: stdout,
-      error: stderr || undefined
+      error: stderr || undefined,
+      pm2Binary: pm2
     };
   } catch (error: any) {
     return {
       success: false,
       output: '',
-      error: error.message || 'Failed to get PM2 application logs'
+      error: error.message || 'Failed to get PM2 application logs',
+      errorDetails: (error && (error.stderr || error.stack || String(error))) || undefined
     };
   }
 }
@@ -290,17 +347,21 @@ export async function getPM2AppLogs(nameOrId: string, lines: number = 100, cwd?:
  */
 export async function stopAllPM2Apps(): Promise<PM2CommandResult> {
   try {
-    const { stdout, stderr } = await execAsync('pm2 kill');
+    const pm2 = await getPm2Binary();
+    const cmd = `${pm2} kill`;
+    const { stdout, stderr } = await execAsync(cmd);
     return {
       success: true,
       output: stdout,
-      error: stderr || undefined
+      error: stderr || undefined,
+      pm2Binary: pm2
     };
   } catch (error: any) {
     return {
       success: false,
       output: '',
-      error: error.message || 'Failed to stop all PM2 applications'
+      error: error.message || 'Failed to stop all PM2 applications',
+      errorDetails: (error && (error.stderr || error.stack || String(error))) || undefined
     };
   }
 }
